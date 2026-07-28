@@ -359,10 +359,16 @@
   // Terminal
   const term = document.getElementById('term-input');
   const out = document.getElementById('term-output');
+  // Everything echoed back from the prompt goes through this first. The
+  // banner text below is ours and may carry markup; whatever was typed at
+  // the prompt is not, and gets escaped before it ever reaches innerHTML.
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[c]);
   term.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       const cmd = term.value.trim().toLowerCase();
-      out.innerHTML += `crystal@core:~$ ${term.value}<br>`;
+      out.innerHTML += `crystal@core:~$ ${esc(term.value)}<br>`;
       if (cmd === 'help') {
         out.innerHTML += `Available commands:<br>
         help, clear, mars, starship, status, news, reboot, about<br><br>`;
@@ -392,7 +398,7 @@
       } else if (cmd === 'reboot') {
         location.reload();
       } else if (cmd) {
-        out.innerHTML += `Command not found: ${cmd}<br><br>`;
+        out.innerHTML += `Command not found: ${esc(cmd)}<br><br>`;
       }
       term.value = '';
       out.scrollTop = out.scrollHeight;
