@@ -1,4 +1,4 @@
-# CrystalCore.OS v0.1
+# CrystalCore.OS v0.2
 
 A clean, futuristic web-based operating system themed around multiplanetary progress (Mars + Starship aesthetic).
 
@@ -6,18 +6,18 @@ A clean, futuristic web-based operating system themed around multiplanetary prog
 
 ## Features
 
-- Boot screen with animated crystal core logo + Starship silhouette vibe
-- Desktop with floating translucent glass-morphism windows
-- Live “Mars Clock” (sol counter + Earth time)
-- Quick-launch tiles / windows: Starship Telemetry, Terminal
-- Dark/glass morphism UI with soft blue/cyan crystal glow
-- Fully responsive (works on phone + desktop)
+- Boot screen with animated crystal core logo + soft cyan/purple glow
+- Desktop with floating translucent **glass-morphism** windows
+- **Draggable windows** (mouse + touch) — click headers to move, bring to front
+- Live “Mars Clock” (sol counter + Earth UTC time)
+- Starship Telemetry panel (Flight 13 status + Polymarket odds)
+- News Feed window
+- Interactive Terminal with commands
+- Dark crystal UI with blue/cyan glow accents
+- Fully responsive (phone + desktop)
 - Pure single-file HTML/CSS/JS — no backend, no build step
 
 ## How to run locally
-
-1. Clone this repo or download `index.html`
-2. Open `index.html` in any modern browser
 
 ```bash
 git clone https://github.com/CrystalArchitect/CrystalCore.OS.git
@@ -29,21 +29,23 @@ open index.html   # or just double-click
 
 - `help` – list commands
 - `clear` – clear terminal
-- `mars` – Mars status
-- `starship` – latest Starship telemetry note
+- `mars` – Mars status + sol
+- `starship` – latest Starship note
 - `status` – OS status
+- `news` – quick news
+- `about` – credits
 - `reboot` – reload
 
-## Next upgrades (just say the word)
+## Roadmap (just say the word)
 
-- Draggable windows
 - Real Starlink / satellite map
 - Full Starship launch simulator
 - Dark/light crystal themes
-- Mobile PWA
-- News feed + Polymarket live odds
-- More apps & multi-window management
+- Mobile PWA install
+- Live Polymarket odds API
+- Window minimize / multi-desktop
+- Custom wallpaper & crystal themes
 
-Built with ❤️ for the multiplanetary future.
+Built with ❤️ for the multiplanetary future by CrystalArchitect / TerAustralis Incognita.
 
 CrystalCore.OS — *Distance is the built-in quarantine.*
