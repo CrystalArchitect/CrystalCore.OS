@@ -132,8 +132,9 @@
   #terminal {
     bottom: 80px; left: 40px; width: 500px; height: 280px;
   }
+  /* Height follows content — a fixed height clips the snapshot note. */
   #news {
-    top: 280px; right: 40px; width: 380px; height: 220px;
+    top: 280px; right: 40px; width: 380px;
   }
   
   .sol {
@@ -151,6 +152,17 @@
     font-size: 14px;
   }
   .stat:last-child { border: none; }
+
+  /* Marks a window whose contents are recorded, not instrumented. This page
+     makes no network calls; anything that looks like a reading is static. */
+  .snapshot-note {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    opacity: 0.5;
+  }
   
   #term-output {
     height: 180px;
@@ -214,32 +226,32 @@
       </div>
     </div>
 
-    <!-- Telemetry -->
+    <!-- Starship — recorded snapshot, not instrumentation. See .snapshot-note. -->
     <div class="window" id="telemetry">
       <div class="window-header">
-        <span>◈ STARSHIP TELEMETRY</span>
+        <span>◈ STARSHIP — SNAPSHOT</span>
         <div class="window-close" onclick="closeWin(this)"></div>
       </div>
       <div class="window-body">
         <div class="stat"><span>Flight</span><span>13 (Ship 40)</span></div>
         <div class="stat"><span>Status</span><span style="color:#7dffb3">Intact Splashdown</span></div>
         <div class="stat"><span>Location</span><span>Indian Ocean</span></div>
-        <div class="stat"><span>Polymarket Reusability</span><span>62%</span></div>
         <div class="stat"><span>Mars Commitment</span><span style="color:#00e5ff">REAFFIRMED</span></div>
+        <div class="snapshot-note">Static snapshot — not live telemetry. Reviewed 2026-07.</div>
       </div>
     </div>
 
-    <!-- News Feed -->
+    <!-- News — recorded snapshot, not a feed. -->
     <div class="window" id="news">
       <div class="window-header">
-        <span>◈ NEWS FEED</span>
+        <span>◈ NEWS — SNAPSHOT</span>
         <div class="window-close" onclick="closeWin(this)"></div>
       </div>
       <div class="window-body" style="padding:12px 20px;">
         <div class="news-item"><span class="news-tag">STARSHIP</span> Flight 13 soft splashdown confirmed — heat shield mostly intact</div>
         <div class="news-item"><span class="news-tag">MARS</span> NASA + SpaceX: 2028 uncrewed window remains on track</div>
-        <div class="news-item"><span class="news-tag">POLYMARKET</span> Starship reusability odds: 62% (up 4% this week)</div>
         <div class="news-item"><span class="news-tag">CORE</span> CrystalCore.OS v0.2 — windows now draggable</div>
+        <div class="snapshot-note">Static snapshot — not a live feed. Reviewed 2026-07.</div>
       </div>
     </div>
 
@@ -289,8 +301,10 @@
     document.getElementById('taskbar-time').textContent = 
       now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
     
-    // Sol counter (approx from Perseverance landing)
-    const sol = Math.floor((now - new Date('2021-02-18')) / (24.65 * 3600 * 1000));
+    // Sol counter from Perseverance's landing. 88775.244 s is the true length
+    // of a Martian sol; the earlier 24.65 h (88740 s) ran 35.244 s/sol fast and
+    // had already drifted a full sol ahead of CrystalCore-AERIS by 2026-07.
+    const sol = Math.floor((now - new Date('2021-02-18')) / (88775.244 * 1000));
     document.getElementById('sol-count').textContent = `Sol ${sol}`;
   }
   setInterval(updateClocks, 1000);
@@ -377,14 +391,15 @@
         out.innerHTML += `Flight 13: Ship 40 soft splashdown confirmed.<br>
         Heat shield: mostly intact.<br>
         Next: catch attempts + orbital refueling.<br>
-        Reusability odds: 62%<br><br>`;
+        Static snapshot, reviewed 2026-07 — this OS has no live feed.<br><br>`;
       } else if (cmd === 'status') {
         out.innerHTML += `CrystalCore.OS v0.2 online<br>
         Kernel: multiplanetary<br>
         Windows: draggable ✓<br>
         Mood: optimistic<br><br>`;
       } else if (cmd === 'news') {
-        out.innerHTML += `Latest: Flight 13 splashdown • 2028 Mars window on track • Reusability 62%<br><br>`;
+        out.innerHTML += `Latest: Flight 13 splashdown • 2028 Mars window on track<br>
+        Static snapshot, reviewed 2026-07 — not a live feed.<br><br>`;
       } else if (cmd === 'about') {
         out.innerHTML += `CrystalCore.OS — multiplanetary desktop<br>
         Built by CrystalArchitect / TerAustralis Incognita<br>

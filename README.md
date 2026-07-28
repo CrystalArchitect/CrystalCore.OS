@@ -10,8 +10,8 @@ A clean, futuristic web-based operating system themed around multiplanetary prog
 - Desktop with floating translucent **glass-morphism** windows
 - **Draggable windows** (mouse + touch) — click headers to move, bring to front
 - Live “Mars Clock” (sol counter + Earth UTC time)
-- Starship Telemetry panel (Flight 13 status + Polymarket odds)
-- News Feed window
+- Starship snapshot panel (Flight 13 status — a recorded snapshot, not live telemetry)
+- News snapshot window (recorded, not a live feed)
 - Interactive Terminal with commands
 - Dark crystal UI with blue/cyan glow accents
 - Fully responsive (phone + desktop)
