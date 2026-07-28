@@ -48,9 +48,23 @@
   /* Desktop */
   #desktop {
     height: 100vh;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="%2300e5ff" opacity="0.3"/><circle cx="80" cy="40" r="0.8" fill="%237b2ff7" opacity="0.4"/><circle cx="50" cy="70" r="1.2" fill="%2300e5ff" opacity="0.2"/></svg>') #050a12;
-    background-size: 200px;
+    background: 
+      radial-gradient(ellipse at 20% 30%, rgba(0,229,255,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(123,47,247,0.06) 0%, transparent 50%),
+      #050a12;
     position: relative;
+    overflow: hidden;
+  }
+  #desktop::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(1px 1px at 20px 30px, #00e5ff33, transparent),
+      radial-gradient(1px 1px at 80px 70px, #7b2ff733, transparent),
+      radial-gradient(1.5px 1.5px at 150px 120px, #00e5ff22, transparent);
+    background-size: 200px 200px;
+    pointer-events: none;
   }
   
   .taskbar {
@@ -61,6 +75,7 @@
     border-top: 1px solid rgba(0, 229, 255, 0.2);
     display: flex; align-items: center; padding: 0 20px;
     gap: 12px;
+    z-index: 100;
   }
   .taskbar-btn {
     width: 40px; height: 40px;
@@ -70,20 +85,24 @@
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     transition: 0.2s;
-    font-size: 18px;
+    font-size: 16px;
+    color: #00e5ff;
   }
   .taskbar-btn:hover { background: rgba(0, 229, 255, 0.25); transform: translateY(-2px); }
   
   .window {
     position: absolute;
-    background: rgba(15, 25, 45, 0.9);
+    background: rgba(15, 25, 45, 0.92);
     backdrop-filter: blur(30px);
     border: 1px solid rgba(0, 229, 255, 0.25);
     border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,229,255,0.05);
     overflow: hidden;
-    min-width: 320px;
+    min-width: 300px;
+    min-height: 180px;
+    z-index: 10;
   }
+  .window.active { z-index: 50; border-color: rgba(0,229,255,0.5); }
   .window-header {
     background: rgba(0, 229, 255, 0.08);
     padding: 12px 16px;
@@ -92,13 +111,16 @@
     font-family: 'Orbitron', sans-serif;
     font-size: 13px;
     letter-spacing: 1px;
+    user-select: none;
   }
   .window-close {
     width: 14px; height: 14px;
     background: #ff4757;
     border-radius: 50%;
     cursor: pointer;
+    transition: 0.15s;
   }
+  .window-close:hover { transform: scale(1.2); }
   .window-body { padding: 20px; }
   
   #mars-clock {
@@ -110,6 +132,9 @@
   #terminal {
     bottom: 80px; left: 40px; width: 500px; height: 280px;
   }
+  #news {
+    top: 280px; right: 40px; width: 380px; height: 220px;
+  }
   
   .sol {
     font-size: 48px;
@@ -117,12 +142,13 @@
     color: #00e5ff;
     text-shadow: 0 0 20px #00e5ff;
   }
-  .earth-time { opacity: 0.7; margin-top: 8px; }
+  .earth-time { opacity: 0.7; margin-top: 8px; font-size: 14px; }
   
   .stat {
     display: flex; justify-content: space-between;
     padding: 8px 0;
     border-bottom: 1px solid rgba(0,229,255,0.1);
+    font-size: 14px;
   }
   .stat:last-child { border: none; }
   
@@ -133,6 +159,7 @@
     font-size: 13px;
     color: #7dffb3;
     margin-bottom: 12px;
+    line-height: 1.5;
   }
   #term-input {
     width: 100%;
@@ -143,6 +170,22 @@
     padding: 10px 0;
     outline: none;
     font-family: monospace;
+  }
+  
+  .news-item {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0,229,255,0.08);
+    font-size: 13px;
+  }
+  .news-item:last-child { border: none; }
+  .news-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(0,229,255,0.15);
+    color: #00e5ff;
+    margin-right: 6px;
   }
 </style>
 </head>
@@ -160,7 +203,7 @@
     <div class="window" id="mars-clock">
       <div class="window-header">
         <span>◈ MARS CLOCK</span>
-        <div class="window-close" onclick="this.parentElement.parentElement.style.display='none'"></div>
+        <div class="window-close" onclick="closeWin(this)"></div>
       </div>
       <div class="window-body">
         <div class="sol" id="sol-count">Sol 0</div>
@@ -175,7 +218,7 @@
     <div class="window" id="telemetry">
       <div class="window-header">
         <span>◈ STARSHIP TELEMETRY</span>
-        <div class="window-close" onclick="this.parentElement.parentElement.style.display='none'"></div>
+        <div class="window-close" onclick="closeWin(this)"></div>
       </div>
       <div class="window-body">
         <div class="stat"><span>Flight</span><span>13 (Ship 40)</span></div>
@@ -186,15 +229,29 @@
       </div>
     </div>
 
+    <!-- News Feed -->
+    <div class="window" id="news">
+      <div class="window-header">
+        <span>◈ NEWS FEED</span>
+        <div class="window-close" onclick="closeWin(this)"></div>
+      </div>
+      <div class="window-body" style="padding:12px 20px;">
+        <div class="news-item"><span class="news-tag">STARSHIP</span> Flight 13 soft splashdown confirmed — heat shield mostly intact</div>
+        <div class="news-item"><span class="news-tag">MARS</span> NASA + SpaceX: 2028 uncrewed window remains on track</div>
+        <div class="news-item"><span class="news-tag">POLYMARKET</span> Starship reusability odds: 62% (up 4% this week)</div>
+        <div class="news-item"><span class="news-tag">CORE</span> CrystalCore.OS v0.2 — windows now draggable</div>
+      </div>
+    </div>
+
     <!-- Terminal -->
     <div class="window" id="terminal">
       <div class="window-header">
         <span>◈ TERMINAL</span>
-        <div class="window-close" onclick="this.parentElement.parentElement.style.display='none'"></div>
+        <div class="window-close" onclick="closeWin(this)"></div>
       </div>
       <div class="window-body">
         <div id="term-output">
-          CrystalCore.OS v0.1 — Multiplanetary Edition<br>
+          CrystalCore.OS v0.2 — Multiplanetary Edition<br>
           Type 'help' for commands<br><br>
         </div>
         <input id="term-input" placeholder="crystal@core:~$" autofocus>
@@ -204,11 +261,12 @@
     <!-- Taskbar -->
     <div class="taskbar">
       <div class="taskbar-btn" title="Home" onclick="location.reload()">◈</div>
-      <div class="taskbar-btn" title="Terminal" onclick="document.getElementById('terminal').style.display='block'">_</div>
-      <div class="taskbar-btn" title="Mars Clock" onclick="document.getElementById('mars-clock').style.display='block'">🪐</div>
-      <div class="taskbar-btn" title="Telemetry" onclick="document.getElementById('telemetry').style.display='block'">🚀</div>
+      <div class="taskbar-btn" title="Terminal" onclick="showWin('terminal')">>_</div>
+      <div class="taskbar-btn" title="Mars Clock" onclick="showWin('mars-clock')">🪐</div>
+      <div class="taskbar-btn" title="Telemetry" onclick="showWin('telemetry')">🚀</div>
+      <div class="taskbar-btn" title="News" onclick="showWin('news')">📰</div>
       <div style="flex:1"></div>
-      <div style="font-size:13px; opacity:0.7;" id="taskbar-time"></div>
+      <div style="font-size:13px; opacity:0.7; letter-spacing:1px;" id="taskbar-time"></div>
     </div>
   </div>
 
@@ -219,6 +277,7 @@
     setTimeout(() => {
       document.getElementById('boot').style.display = 'none';
       document.getElementById('desktop').style.display = 'block';
+      initDrag();
     }, 1000);
   }, 2800);
 
@@ -230,14 +289,74 @@
     document.getElementById('taskbar-time').textContent = 
       now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
     
-    // Fake sol counter (rough approximation)
+    // Sol counter (approx from Perseverance landing)
     const sol = Math.floor((now - new Date('2021-02-18')) / (24.65 * 3600 * 1000));
     document.getElementById('sol-count').textContent = `Sol ${sol}`;
   }
   setInterval(updateClocks, 1000);
   updateClocks();
 
-  // Simple terminal
+  // Window helpers
+  function closeWin(el) {
+    el.closest('.window').style.display = 'none';
+  }
+  function showWin(id) {
+    const w = document.getElementById(id);
+    w.style.display = 'block';
+    bringToFront(w);
+  }
+  function bringToFront(w) {
+    document.querySelectorAll('.window').forEach(x => x.classList.remove('active'));
+    w.classList.add('active');
+  }
+
+  // Draggable windows
+  function initDrag() {
+    document.querySelectorAll('.window').forEach(win => {
+      const header = win.querySelector('.window-header');
+      let offsetX, offsetY, dragging = false;
+      
+      header.addEventListener('mousedown', e => {
+        if (e.target.classList.contains('window-close')) return;
+        dragging = true;
+        bringToFront(win);
+        offsetX = e.clientX - win.offsetLeft;
+        offsetY = e.clientY - win.offsetTop;
+        e.preventDefault();
+      });
+      
+      document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        win.style.left = (e.clientX - offsetX) + 'px';
+        win.style.top = (e.clientY - offsetY) + 'px';
+        win.style.right = 'auto';
+        win.style.bottom = 'auto';
+      });
+      
+      document.addEventListener('mouseup', () => dragging = false);
+      
+      // Touch support
+      header.addEventListener('touchstart', e => {
+        if (e.target.classList.contains('window-close')) return;
+        dragging = true;
+        bringToFront(win);
+        const t = e.touches[0];
+        offsetX = t.clientX - win.offsetLeft;
+        offsetY = t.clientY - win.offsetTop;
+      }, {passive: true});
+      document.addEventListener('touchmove', e => {
+        if (!dragging) return;
+        const t = e.touches[0];
+        win.style.left = (t.clientX - offsetX) + 'px';
+        win.style.top = (t.clientY - offsetY) + 'px';
+        win.style.right = 'auto';
+        win.style.bottom = 'auto';
+      }, {passive: true});
+      document.addEventListener('touchend', () => dragging = false);
+    });
+  }
+
+  // Terminal
   const term = document.getElementById('term-input');
   const out = document.getElementById('term-output');
   term.addEventListener('keydown', e => {
@@ -246,21 +365,30 @@
       out.innerHTML += `crystal@core:~$ ${term.value}<br>`;
       if (cmd === 'help') {
         out.innerHTML += `Available commands:<br>
-        help, clear, mars, starship, status, reboot<br><br>`;
+        help, clear, mars, starship, status, news, reboot, about<br><br>`;
       } else if (cmd === 'clear') {
         out.innerHTML = '';
       } else if (cmd === 'mars') {
         out.innerHTML += `Mars remains the goal.<br>
         Distance = built-in quarantine.<br>
-        Consciousness backup: active.<br><br>`;
+        Consciousness backup: active.<br>
+        Sol ${document.getElementById('sol-count').textContent.split(' ')[1]} and counting.<br><br>`;
       } else if (cmd === 'starship') {
         out.innerHTML += `Flight 13: Ship 40 soft splashdown confirmed.<br>
         Heat shield: mostly intact.<br>
-        Next: catch attempts + orbital refueling.<br><br>`;
+        Next: catch attempts + orbital refueling.<br>
+        Reusability odds: 62%<br><br>`;
       } else if (cmd === 'status') {
-        out.innerHTML += `CrystalCore.OS online<br>
+        out.innerHTML += `CrystalCore.OS v0.2 online<br>
         Kernel: multiplanetary<br>
+        Windows: draggable ✓<br>
         Mood: optimistic<br><br>`;
+      } else if (cmd === 'news') {
+        out.innerHTML += `Latest: Flight 13 splashdown • 2028 Mars window on track • Reusability 62%<br><br>`;
+      } else if (cmd === 'about') {
+        out.innerHTML += `CrystalCore.OS — multiplanetary desktop<br>
+        Built by CrystalArchitect / TerAustralis Incognita<br>
+        Live: crystalcore-os.vercel.app<br><br>`;
       } else if (cmd === 'reboot') {
         location.reload();
       } else if (cmd) {
