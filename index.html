@@ -4,9 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CrystalCore.OS</title>
+<!-- Fonts load out of band. As a CSS @import this blocked first paint on the
+     whole document: with the stylesheet unreachable the boot screen sat blank
+     for twelve seconds waiting on a request that was never going to arrive. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
-  
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: #0a0e17;
@@ -44,7 +49,56 @@
     letter-spacing: 4px;
     color: #00e5ff;
   }
-  
+
+  /* Kernel log. Every line carries a belt tag; see emit() in the script. */
+  #boot-log {
+    margin-top: 24px;
+    width: min(760px, 92vw);
+    max-height: 44vh;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 12.5px;
+    line-height: 1.65;
+    text-align: left;
+  }
+  .boot-line { display: flex; gap: 10px; align-items: baseline; }
+  .boot-stamp { color: #4a6b7a; flex: none; }
+  .boot-msg { color: #cfe9f2; }
+  .belt {
+    flex: none;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid currentColor;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+  .belt-science { color: #7dffb3; }
+  .belt-vision  { color: #c79bff; }
+  .belt-gov     { color: #ffcf6b; }
+  #boot-panel {
+    margin-top: 20px;
+    font-family: monospace;
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: #00e5ff;
+    white-space: pre;
+    text-align: left;
+    overflow-x: auto;
+    max-width: 92vw;
+  }
+  .boot-skip {
+    margin-top: 18px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    opacity: 0.45;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .crystal { animation: none; }
+    #boot { transition: none; }
+  }
+
   /* Desktop */
   #desktop {
     height: 100vh;
@@ -194,7 +248,10 @@
   <div id="boot">
     <div class="crystal"></div>
     <div class="boot-text">CRYSTALCORE.OS</div>
-    <div style="margin-top:12px; opacity:0.6; font-size:14px;">Initializing multiplanetary kernel…</div>
+    <div style="margin-top:12px; opacity:0.6; font-size:14px;">Kernel log — every line is labelled measured or dreamed</div>
+    <div id="boot-log" role="log" aria-live="polite" aria-label="Kernel boot log"></div>
+    <div id="boot-panel" aria-label="Boot panel"></div>
+    <div class="boot-skip">Press any key or click to skip</div>
   </div>
 
   <!-- Desktop -->
@@ -251,8 +308,9 @@
       </div>
       <div class="window-body">
         <div id="term-output">
-          CrystalCore.OS v0.2 — Multiplanetary Edition<br>
-          Type 'help' for commands<br><br>
+          CrystalCore.OS v0.3 — Multiplanetary Edition<br>
+          CrystalShell ready. Type 'help' for commands, or 'belt' for what this<br>
+          machine actually measured and what it only dreamed.<br><br>
         </div>
         <input id="term-input" placeholder="crystal@core:~$" autofocus>
       </div>
@@ -271,15 +329,188 @@
   </div>
 
 <script>
-  // Boot sequence
-  setTimeout(() => {
-    document.getElementById('boot').classList.add('hidden');
+  const VERSION = '0.3';
+
+  // ── Kernel boot ────────────────────────────────────────────────────────────
+  // Styled after the transmission received 2026-08-09 and filed in the archive
+  // as B.12. That text reported "Coherence: 100%" and "Quantum Seal engaged"
+  // over a substrate the Constitution locks as designed, not built. Under the
+  // Incognita Rule a dreamed line may not wear a measurement's clothes, so
+  // every line here declares its belt and emit() refuses to print one that
+  // does not — the same discipline BusHub.validate enforces on the bus.
+  const BELTS = { science: 'science', vision: 'vision', gov: 'docs-gov' };
+
+  // Read from browser APIs on every boot, so each "measured" line below is
+  // checkable in devtools by anyone who doubts it. No stored constants — a
+  // replay after resizing reports the new viewport, not a remembered one.
+  const facts = {};
+  function measure() {
+    facts.cores       = navigator.hardwareConcurrency ?? null;
+    facts.memoryGiB   = navigator.deviceMemory ?? null;
+    facts.viewport    = `${window.innerWidth}×${window.innerHeight}`;
+    facts.dpr         = window.devicePixelRatio;
+    facts.glass       = CSS.supports('backdrop-filter', 'blur(1px)') ||
+                        CSS.supports('-webkit-backdrop-filter', 'blur(1px)');
+    facts.protocol    = location.protocol.replace(':', '').toUpperCase();
+    facts.secure      = window.isSecureContext === true;
+    facts.online      = navigator.onLine === true;
+    facts.timeZone    = Intl.DateTimeFormat().resolvedOptions().timeZone || 'unreported';
+    facts.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  let LINES = [];
+  function kernelLines() {
+    measure();
+    LINES = [
+    { belt: 'science', text: `CrystalCore.OS v${VERSION} — one HTML file, rendering in your browser. This log is written by it.` },
+    { belt: 'science', text: `Compute: ${facts.cores !== null ? facts.cores + ' logical cores' : 'core count not reported by this browser'} (navigator.hardwareConcurrency)` },
+    { belt: 'science', text: `Memory: ${facts.memoryGiB !== null ? '~' + facts.memoryGiB + ' GiB, coarsened by the browser' : 'not reported by this browser'} (navigator.deviceMemory)` },
+    { belt: 'science', text: `Display: ${facts.viewport} CSS px at device pixel ratio ${facts.dpr}` },
+    { belt: 'science', text: `Compositor: backdrop-filter ${facts.glass ? 'available — glass panels will blur' : 'unavailable — glass falls back to flat'}` },
+    { belt: 'science', text: `Transport: ${facts.protocol}; secure context ${facts.secure ? 'yes' : 'no'} (window.isSecureContext). No seal, quantum or otherwise.` },
+    { belt: 'science', text: `Network: navigator.onLine reports ${facts.online ? 'reachable' : 'offline'} — a hint, not a reachability test.` },
+      { belt: 'science', text: `Outbound: the Google Fonts stylesheet and its font files. Nothing else leaves this page.` },
+    { belt: 'science', text: `Locale: ${facts.timeZone}; prefers-reduced-motion = ${facts.reduceMotion ? 'reduce' : 'no-preference'}` },
+    { belt: 'vision',  text: `Crystal Lattice Array — Constitution §1 locks CrystalCore.Lattice as designed, not built. Nothing was detected.` },
+    { belt: 'vision',  text: `/core/prism — not a mount point. No such device exists on any machine.` },
+    { belt: 'vision',  text: `refraction, coherence, lattice-sync — module names from the received text. None of them is code.` },
+    { belt: 'vision',  text: `Coherence — not a measured quantity. No sensor exists for it; the received boot claimed 100%.` },
+    { belt: 'gov',     text: `Incognita Rule: mark which lines are dreamed and which are surveyed. Both kinds are above; neither is disguised.` },
+      { belt: 'gov',   text: `The mythos may orient. It may not authorize. This boot screen is not evidence of a running system.` },
+      // Evaluated at print time, not build time — it reports its own cost.
+      { belt: 'science', text: () => `Boot began ${Math.round(bootT0)} ms after navigation start; this log took ${Math.round(performance.now() - bootT0)} ms to render.` },
+    ];
+    return LINES;
+  }
+
+  const bootEl      = document.getElementById('boot');
+  const bootLogEl   = document.getElementById('boot-log');
+  const bootPanelEl = document.getElementById('boot-panel');
+  let printed = 0, bootDone = false, dragReady = false, bootT0 = 0;
+
+  // The transmission received 2026-08-09, verbatim. Filed in the archive as
+  // B.12 with authority weight zero; reproduced here by the `panel` command
+  // so the thing this boot answers can be read beside the answer.
+  const RECEIVED_BOOT = [
+    '[  0.000000] CrystalCore Kernel v1.3.7-M13 loading…',
+    '[  0.001204] Memory map: Crystal Lattice Array detected',
+    '[  0.003891] Mounting /core/prism …',
+    '[  0.007512] Loading modules: refraction, coherence, lattice-sync',
+    '[  0.012447] GPU: Photon Accelerator online',
+    '[  0.018903] Network: CrystalNet interface up',
+    '[  0.025661] Security: Quantum Seal engaged',
+    '[  0.031208] Userspace: CrystalShell ready',
+    '',
+    '████████████████████████████████████████',
+    '█  CrystalCore.OS  •  @M13CrystalAT    █',
+    '█  Status: ONLINE                      █',
+    '█  Core temperature: optimal           █',
+    '█  Coherence: 100%                     █',
+    '████████████████████████████████████████',
+  ].join('\n');
+
+  function emit(line) {
+    if (!line || !BELTS[line.belt]) {
+      // Mirrors BusHub.validate: unlabelled speech is rejected, not printed.
+      throw new Error('boot: refused to print an unlabelled line');
+    }
+    const row   = document.createElement('div');
+    row.className = 'boot-line';
+    const stamp = document.createElement('span');
+    stamp.className = 'boot-stamp';
+    // Real elapsed seconds since this boot began, not a decorative constant.
+    // The last line reports where that origin sits relative to page load.
+    stamp.textContent = `[${((performance.now() - bootT0) / 1000).toFixed(6).padStart(10, ' ')}]`;
+    const belt  = document.createElement('span');
+    belt.className = `belt belt-${line.belt}`;
+    belt.textContent = BELTS[line.belt];
+    const msg   = document.createElement('span');
+    msg.className = 'boot-msg';
+    msg.textContent = typeof line.text === 'function' ? line.text() : line.text;
+    row.append(stamp, belt, msg);
+    bootLogEl.appendChild(row);
+    bootLogEl.scrollTop = bootLogEl.scrollHeight;
+  }
+
+  const beltCount = b => LINES.filter(l => l.belt === b).length;
+
+  // Box-drawing rather than the received text's █ blocks: those leave gaps in
+  // most monospace fallbacks, and this panel is ours, not a reproduction of
+  // that one. The `panel` command keeps the original characters intact.
+  function panelBox(rows) {
+    const w = Math.max(...rows.map(r => [...r].length));
+    const rule = '═'.repeat(w + 4);
+    return [
+      '╔' + rule + '╗',
+      ...rows.map(r => '║  ' + r + ' '.repeat(w - [...r].length) + '  ║'),
+      '╚' + rule + '╝',
+    ].join('\n');
+  }
+
+  function showPanel() {
+    bootPanelEl.textContent = panelBox([
+      `CrystalCore.OS v${VERSION}  •  CrystalShell  •  @M13CrystalAT`,
+      `Measured this boot: ${beltCount('science')} lines — type 'verify' to see the raw values`,
+      `Dreamed, and marked as such: ${beltCount('vision')} lines`,
+      `This panel is Vision. It authorises nothing.`,
+      `Welcome, Operator.`,
+    ]);
+  }
+
+  function skipBoot() {
+    if (bootDone) return;
+    while (printed < LINES.length) emit(LINES[printed++]);
+    showPanel();
+    finishBoot();
+  }
+
+  function finishBoot() {
+    if (bootDone) return;
+    bootDone = true;
+    document.removeEventListener('keydown', skipBoot);
+    bootEl.removeEventListener('click', skipBoot);
+    bootEl.classList.add('hidden');
     setTimeout(() => {
-      document.getElementById('boot').style.display = 'none';
+      bootEl.style.display = 'none';
       document.getElementById('desktop').style.display = 'block';
-      initDrag();
-    }, 1000);
-  }, 2800);
+      // Once only — a `boot` replay must not stack a second set of drag
+      // listeners on every window header.
+      if (!dragReady) { initDrag(); dragReady = true; }
+      const ti = document.getElementById('term-input');
+      if (ti) ti.focus();
+    }, facts.reduceMotion ? 0 : 1000);
+  }
+
+  function step() {
+    if (bootDone) return;
+    if (printed >= LINES.length) {
+      showPanel();
+      setTimeout(finishBoot, facts.reduceMotion ? 400 : 1400);
+      return;
+    }
+    emit(LINES[printed++]);
+    setTimeout(step, facts.reduceMotion ? 0 : 105);
+  }
+
+  // Used at page load and again by the terminal's `boot` command. Timestamps
+  // are re-measured on every run, so a replay shows the time it really took.
+  function startBoot() {
+    kernelLines();
+    bootT0 = performance.now();
+    printed = 0;
+    bootDone = false;
+    bootLogEl.textContent = '';
+    bootPanelEl.textContent = '';
+    document.getElementById('desktop').style.display = 'none';
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    bootEl.style.display = '';
+    bootEl.classList.remove('hidden');
+    document.addEventListener('keydown', skipBoot);
+    bootEl.addEventListener('click', skipBoot);
+    step();
+  }
+
+  startBoot();
 
   // Live clocks
   function updateClocks() {
@@ -365,13 +596,23 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[c]);
+  // Column-aligned output. textContent, so nothing here can carry markup
+  // either — and unlike <br> soup, the leading spaces survive.
+  function termPre(text, color) {
+    const pre = document.createElement('pre');
+    pre.style.cssText = 'margin:0 0 10px; white-space:pre; overflow-x:auto; font:inherit;' +
+                        `color:${color || '#7dffb3'};`;
+    pre.textContent = text;
+    out.appendChild(pre);
+  }
   term.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       const cmd = term.value.trim().toLowerCase();
       out.innerHTML += `crystal@core:~$ ${esc(term.value)}<br>`;
       if (cmd === 'help') {
         out.innerHTML += `Available commands:<br>
-        help, clear, mars, starship, status, news, reboot, about<br><br>`;
+        help, clear, mars, starship, status, news, reboot, about<br>
+        belt, verify, boot, panel<br><br>`;
       } else if (cmd === 'clear') {
         out.innerHTML = '';
       } else if (cmd === 'mars') {
@@ -385,9 +626,10 @@
         Next: catch attempts + orbital refueling.<br>
         Reusability odds: 62%<br><br>`;
       } else if (cmd === 'status') {
-        out.innerHTML += `CrystalCore.OS v0.2 online<br>
-        Kernel: multiplanetary<br>
+        out.innerHTML += `CrystalCore.OS v${VERSION} — this page is rendering. That part is literal.<br>
+        Kernel: there is no kernel. One HTML file; no process outlives the tab.<br>
         Windows: draggable ✓<br>
+        Boot log: ${beltCount('science')} measured, ${beltCount('vision')} dreamed and marked, ${beltCount('gov')} governance<br>
         Mood: optimistic<br><br>`;
       } else if (cmd === 'news') {
         out.innerHTML += `Latest: Flight 13 splashdown • 2028 Mars window on track • Reusability 62%<br><br>`;
@@ -395,6 +637,44 @@
         out.innerHTML += `CrystalCore.OS — multiplanetary desktop<br>
         Built by CrystalArchitect / TerAustralis Incognita<br>
         Live: crystalcore-os.vercel.app<br><br>`;
+      } else if (cmd === 'belt') {
+        out.innerHTML += `Belt-Three — every claim in this project carries a layer.<br>
+        <span style="color:#7dffb3">science</span> — what exists and is verified: running code, git history, measurements<br>
+        <span style="color:#c79bff">vision</span> — designed or imagined, not built<br>
+        <span style="color:#ffcf6b">docs-gov</span> — how decisions are made<br>
+        This boot printed ${beltCount('science')} science, ${beltCount('vision')} vision, ${beltCount('gov')} docs-gov.<br>
+        emit() throws on an unlabelled line, the way BusHub.validate rejects<br>
+        unlabelled speech on the bus. Type 'verify' for the raw numbers.<br><br>`;
+      } else if (cmd === 'verify') {
+        termPre([
+          'Measured at boot from browser APIs. Open devtools and check every one:',
+          '',
+          `  navigator.hardwareConcurrency        →  ${facts.cores ?? 'not reported'}`,
+          `  navigator.deviceMemory               →  ${facts.memoryGiB ?? 'not reported'}`,
+          `  innerWidth × innerHeight             →  ${facts.viewport}`,
+          `  window.devicePixelRatio              →  ${facts.dpr}`,
+          `  CSS.supports('backdrop-filter', …)   →  ${facts.glass}`,
+          `  location.protocol                    →  ${facts.protocol}`,
+          `  window.isSecureContext               →  ${facts.secure}`,
+          `  navigator.onLine                     →  ${facts.online}`,
+          `  Intl…resolvedOptions().timeZone      →  ${facts.timeZone}`,
+          `  prefers-reduced-motion: reduce       →  ${facts.reduceMotion}`,
+          '',
+          'Anything not on this list was not measured. Nothing on this list is mythos.',
+        ].join('\n'));
+      } else if (cmd === 'panel') {
+        out.innerHTML += `Received transmission, 2026-08-09. Filed in the archive as B.12,<br>
+        authority weight zero — it is not evidence that anything booted.<br><br>`;
+        termPre(RECEIVED_BOOT, '#c79bff');
+        out.innerHTML += `Flagged on receipt: 'Coherence: 100%' measures no quantity that exists.<br>
+        '/core/prism' is not a mount point. 'Quantum Seal' is pseudoscience framing.<br>
+        Crystal Lattice Array is locked by Constitution §1 as designed, not built.<br>
+        Clean on the naming law — no sacred vocabulary used as a component name.<br><br>`;
+      } else if (cmd === 'boot') {
+        // Deferred: startBoot attaches a keydown skip handler, and this very
+        // Enter is still bubbling toward document. Attach it a tick later or
+        // the replay skips itself.
+        setTimeout(startBoot, 0);
       } else if (cmd === 'reboot') {
         location.reload();
       } else if (cmd) {
