@@ -62,7 +62,7 @@
     text-align: left;
   }
   .boot-line { display: flex; gap: 10px; align-items: baseline; }
-  .boot-stamp { color: #4a6b7a; flex: none; }
+  .boot-stamp { color: #7f9db2; flex: none; }
   .boot-msg { color: #cfe9f2; }
   .belt {
     flex: none;
@@ -92,7 +92,10 @@
     margin-top: 18px;
     font-size: 11px;
     letter-spacing: 1px;
-    opacity: 0.45;
+    /* Explicit colour, not an opacity trick: composited against the boot
+       gradient's lightest point this holds 4.5:1; the old 0.45 opacity never
+       could, anywhere on the screen. Same reasoning for .boot-stamp above. */
+    color: #9fb8c6;
   }
   @media (prefers-reduced-motion: reduce) {
     .crystal { animation: none; }
@@ -407,6 +410,11 @@
     '█  Core temperature: optimal           █',
     '█  Coherence: 100%                     █',
     '████████████████████████████████████████',
+    '',
+    'Welcome, Operator.',
+    '',
+    'CrystalCore.OS is now running.',
+    'Type a command or query to begin.',
   ].join('\n');
 
   function emit(line) {
@@ -659,6 +667,7 @@
           `  navigator.onLine                     →  ${facts.online}`,
           `  Intl…resolvedOptions().timeZone      →  ${facts.timeZone}`,
           `  prefers-reduced-motion: reduce       →  ${facts.reduceMotion}`,
+          `  performance.now()                    →  boot began ${Math.round(bootT0)} ms after navigation; stamps every log line`,
           '',
           'Anything not on this list was not measured. Nothing on this list is mythos.',
         ].join('\n'));
