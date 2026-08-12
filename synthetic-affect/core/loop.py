@@ -14,6 +14,7 @@ The one honesty mechanism worth naming: a closure decision is recorded as
 """
 from __future__ import annotations
 
+import pathlib
 from typing import Any, Callable, Dict, List, Optional
 
 from . import crystalcode
@@ -40,10 +41,20 @@ class Loop:
     def __init__(
         self,
         store_path: str = MEMORY,
-        log_path: str = "examples/logs/loop.jsonl",
+        log_path: Optional[str] = None,
         llm_core: Optional[Callable[[str], str]] = None,
         bind_default: bool = True,
     ):
+        # No log path → a fresh temp directory, not a CWD-relative default.
+        # An earlier default of "examples/logs/loop.jsonl" meant merely
+        # constructing a Loop created directories and truncated a file
+        # wherever the process happened to be standing.
+        if log_path is None:
+            import tempfile
+
+            log_path = str(
+                pathlib.Path(tempfile.mkdtemp(prefix="sat-loop-")) / "loop.jsonl"
+            )
         self.runtime = Runtime(
             state=PersistentStateStore(store_path),
             gap_detector=GapDetector(),

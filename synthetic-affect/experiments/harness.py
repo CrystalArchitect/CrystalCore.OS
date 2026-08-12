@@ -25,19 +25,35 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from core.closure import STRATEGIES
 
-from .agents import ConstantPolicy, LoopAgent, MagnitudeReactivePolicy, StallBlindLoopAgent
+from .agents import (
+    ConstantPolicy,
+    LoopAgent,
+    MagnitudeReactivePolicy,
+    StallBlindLoopAgent,
+    TunedLookupPolicy,
+)
 from .tasks import SUITE, TURN_CAP, ScriptedTask, TaskEnv
 
 RESULTS_DIR = pathlib.Path(__file__).resolve().parent / "results"
 
-#: Construction order fixes report order. A fresh agent per (agent, task) run.
-AGENT_FACTORIES: Tuple[Tuple[str, Callable[[], Any]], ...] = tuple(
-    [("loop", LoopAgent), ("loop_stall_blind", StallBlindLoopAgent)]
-    + [(f"always_{s}", (lambda s=s: ConstantPolicy(s))) for s in STRATEGIES]
-    + [("magnitude_reactive", MagnitudeReactivePolicy)]
+#: Construction order fixes report order. A fresh agent per (agent, task) run;
+#: each factory receives the task, which only the tuned ceiling uses.
+AGENT_FACTORIES: Tuple[Tuple[str, Callable[[ScriptedTask], Any]], ...] = tuple(
+    [("loop", lambda task: LoopAgent()),
+     ("loop_stall_blind", lambda task: StallBlindLoopAgent())]
+    + [(f"always_{s}", (lambda s=s: (lambda task: ConstantPolicy(s)))()) for s in STRATEGIES]
+    + [("magnitude_reactive", lambda task: MagnitudeReactivePolicy()),
+       ("tuned_lookup", lambda task: TunedLookupPolicy(task))]
 )
 
 STATEFUL_AGENTS = ("loop", "loop_stall_blind")
+
+#: The agents eligible for the best-stateless comparison: stateless AND
+#: task-agnostic. The tuned lookup is stateless but task-informed — it bounds
+#: the comparison and must not sit inside it.
+TASK_AGNOSTIC_STATELESS = tuple(
+    [f"always_{s}" for s in STRATEGIES] + ["magnitude_reactive"]
+)
 
 
 def run_one(task: ScriptedTask, agent: Any) -> Dict[str, Any]:
@@ -79,10 +95,10 @@ def run_suite() -> Dict[str, Any]:
     for task in SUITE:
         runs[task.name] = {}
         for agent_name, factory in AGENT_FACTORIES:
-            runs[task.name][agent_name] = run_one(task, factory())
+            runs[task.name][agent_name] = run_one(task, factory(task))
 
     agent_names = [name for name, _ in AGENT_FACTORIES]
-    stateless_names = [n for n in agent_names if n not in STATEFUL_AGENTS]
+    stateless_names = [n for n in agent_names if n in TASK_AGNOSTIC_STATELESS]
 
     resolved_counts = {
         name: sum(1 for task in SUITE if runs[task.name][name]["resolved"])
@@ -122,6 +138,13 @@ def run_suite() -> Dict[str, Any]:
         else:
             loop_vs_best[task.name] = "nobody"
 
+    # The honest aggregates, computed rather than asserted. Adversarial
+    # review (2026-08-12) caught the prose compressing to the one aggregate
+    # that flattered the loop; these fields make the full set unavoidable.
+    verdict_tally: Dict[str, int] = {}
+    for verdict in loop_vs_best.values():
+        verdict_tally[verdict] = verdict_tally.get(verdict, 0) + 1
+
     return {
         "turn_cap": TURN_CAP,
         "agents": agent_names,
@@ -131,6 +154,11 @@ def run_suite() -> Dict[str, Any]:
             "resolved_counts": resolved_counts,
             "best_stateless_per_task": best_stateless,
             "loop_vs_best_stateless": loop_vs_best,
+            "verdict_tally": verdict_tally,
+            "loop_strictly_faster_count": verdict_tally.get("loop_faster", 0),
+            "best_stateless_portfolio_resolved": sum(
+                1 for b in best_stateless.values() if b is not None
+            ),
         },
     }
 
@@ -176,7 +204,11 @@ def render_markdown(results: Dict[str, Any]) -> str:
         " that uses everything the current observation offers; the comparison"
         " below is against the **best stateless result per task**, which is"
         " maximally adversarial to the loop, since a constant policy may be"
-        " pre-tuned to any single task."
+        " pre-tuned to any single task. One further agent, `tuned_lookup`, is"
+        " stateless but **task-informed** — a lookup table built from each"
+        " task's definition. It is excluded from the best-stateless comparison"
+        " and reported as a ceiling: what full task knowledge buys a stateless"
+        " agent."
     )
     lines.append("")
     lines.append("## Turns to resolution")
@@ -192,6 +224,45 @@ def render_markdown(results: Dict[str, Any]) -> str:
     lines.append(
         "**Tasks resolved:** "
         + " · ".join(f"{a} {resolved[a]}/{len(task_names)}" for a in agents)
+    )
+    lines.append("")
+    lines.append("## The honest aggregates — all of them")
+    lines.append("")
+    lines.append(
+        "Adversarial review caught an earlier draft of the surrounding"
+        " documents quoting only the first of these, the one that most"
+        " flatters the loop. They stand together or not at all:"
+    )
+    lines.append("")
+    n = len(task_names)
+    summary = results["summary"]
+    lines.append(
+        f"- **Best single task-agnostic stateless policy: "
+        f"{max(resolved[a] for a in agents if a not in ('loop', 'loop_stall_blind', 'tuned_lookup'))}/{n}"
+        f" resolved** — no one fixed stateless policy adapts across the suite."
+    )
+    lines.append(
+        f"- **Per-task best-stateless portfolio: "
+        f"{summary['best_stateless_portfolio_resolved']}/{n}** — allowed a"
+        " different stateless policy per task, statelessness matches the"
+        " loop's resolved count everywhere except deploy_rollback."
+    )
+    lines.append(
+        f"- **Tasks where the loop is strictly faster than the best stateless:"
+        f" {summary['loop_strictly_faster_count']} of {n}.** The loop never"
+        " wins on raw speed; it wins on resolving with one policy and no task"
+        " knowledge."
+    )
+    lines.append(
+        f"- **Task-informed stateless ceiling (`tuned_lookup`):"
+        f" {resolved['tuned_lookup']}/{n}**, faster-or-equal to the loop on"
+        " every task both resolve, DNF only on deploy_rollback — the one task"
+        " where no observation→strategy table can exist."
+    )
+    lines.append(
+        "- **What state uniquely buys, on this suite:** resolving"
+        f" {resolved['loop']}/{n} with a single policy and no task knowledge,"
+        " and the only resolution of deploy_rollback."
     )
     lines.append("")
     lines.append("## Loop vs best stateless, per task")
@@ -252,9 +323,12 @@ def render_markdown(results: Dict[str, Any]) -> str:
         " design. Criticism of the suite is invited; add a task and rerun."
     )
     lines.append(
-        "- Stateless baselines are task-agnostic. A lookup table tuned to one"
-        " task can solve any deterministic task **except** deploy_rollback,"
-        " where identical observations require different actions."
+        "- The task-agnostic baselines are not exhaustive. Review brute-forced"
+        " all magnitude→strategy maps and found one resolving 3/6 — stronger"
+        " than magnitude_reactive's 2/6, though suite-tuned, changing no"
+        " per-task best and no verdict (pinned by test). The tuned_lookup"
+        " ceiling bounds the whole class: stateless with full task knowledge"
+        " reaches 5/6 and never deploy_rollback."
     )
     lines.append(
         "- Nothing here involves a language model. The LLM Core remains a"
@@ -272,10 +346,16 @@ def render_markdown(results: Dict[str, Any]) -> str:
 def main() -> int:
     results = run_suite()
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    # newline pinned so byte-reproducibility holds on every platform, not
+    # just wherever os.linesep happens to be "\n".
     (RESULTS_DIR / "results.json").write_text(
-        json.dumps(results, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(results, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
-    (RESULTS_DIR / "RESULTS.md").write_text(render_markdown(results), encoding="utf-8")
+    (RESULTS_DIR / "RESULTS.md").write_text(
+        render_markdown(results), encoding="utf-8", newline="\n"
+    )
 
     resolved = results["summary"]["resolved_counts"]
     print(f"[harness] {len(SUITE)} tasks × {len(results['agents'])} agents, cap {TURN_CAP}")

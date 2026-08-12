@@ -21,7 +21,7 @@ class CycleLogger:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.cycle = 0
         self.seq = 0
-        self.path.write_text("", encoding="utf-8")
+        self.path.write_text("", encoding="utf-8", newline="\n")
 
     def begin_cycle(self) -> int:
         """Advance the loop-cycle counter. Called once per `run_cycle`."""
@@ -31,7 +31,7 @@ class CycleLogger:
     def log(self, op: str, data: Dict[str, Any]) -> None:
         self.seq += 1
         entry = {"cycle": self.cycle, "seq": self.seq, "op": op, "data": data}
-        with self.path.open("a", encoding="utf-8") as f:
+        with self.path.open("a", encoding="utf-8", newline="\n") as f:
             f.write(json.dumps(entry, sort_keys=True) + "\n")
 
     def read_all(self) -> List[Dict[str, Any]]:

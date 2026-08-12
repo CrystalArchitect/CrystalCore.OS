@@ -60,12 +60,16 @@ class ConstantPolicy:
 
 
 class MagnitudeReactivePolicy:
-    """The strongest task-agnostic stateless policy in the registry.
+    """A strong task-agnostic stateless policy: full mismatch reads as a
+    question to ask, partial mismatch as something to refine — everything the
+    current observation offers, nothing historical. This is also the ablation
+    for prediction 3: the loop's per-observation knowledge with the state
+    store removed.
 
-    It uses everything the current observation offers — full mismatch reads as
-    a question to ask, partial mismatch as something to refine — and nothing
-    historical. This is also the ablation for prediction 3: it is the loop's
-    per-observation knowledge with the state store removed.
+    Not the strongest possible observation policy — adversarial review found a
+    suite-tuned magnitude→strategy map that resolves 3/6 (pinned by test). It
+    changes no per-task best and no verdicts, and is suite-tuned, which is why
+    it is recorded as a caveat rather than enrolled as a baseline.
     """
 
     stateful = False
@@ -156,8 +160,53 @@ class StallBlindLoopAgent(LoopAgent):
         self._original_classify = original
 
 
+class TunedLookupPolicy:
+    """The task-informed stateless ceiling — built by adversarial review, then
+    adopted so the fact it establishes stays committed and pinned.
+
+    A pure function of the observation, constructed *from the task
+    definition*: each observation maps to the first strategy the task needs at
+    that observation (first need wins on collision). With full task knowledge,
+    stateless matches the loop's resolved count everywhere except
+    `deploy_rollback`, where two identical observations need different
+    strategies and no lookup can hold both. This agent exists to keep the
+    comparison honest: what state uniquely buys is not most of the suite — it
+    is solving *without task knowledge*, plus the identical-observation case.
+
+    Excluded from the task-agnostic registry and from the best-stateless
+    comparison; reported as its own ceiling row.
+    """
+
+    stateful = False
+    name = "tuned_lookup"
+
+    def __init__(self, task: Any):
+        import json as _json
+
+        self._table = {}
+        for stage in task.stages:
+            for k, obstacle in enumerate(stage.obstacles):
+                key = _json.dumps(stage.actuals[k], sort_keys=True)
+                if key not in self._table:
+                    self._table[key] = min(obstacle)
+        self._goal_key = _json.dumps(task.goal, sort_keys=True)
+
+    def decide(self, expected: Any, actual: Any) -> str:
+        import json as _json
+
+        key = _json.dumps(actual, sort_keys=True)
+        if key == self._goal_key:
+            return "stop"
+        return self._table.get(key, "ask")
+
+
 def stateless_registry() -> List[Any]:
-    """Every stateless baseline, freshly constructed."""
+    """Every task-agnostic stateless baseline, freshly constructed.
+
+    `TunedLookupPolicy` is deliberately not here — it is stateless but
+    task-informed, and mixing it into this registry would corrupt the
+    best-task-agnostic-stateless comparison it exists to bound.
+    """
     return [ConstantPolicy(s) for s in STRATEGIES] + [MagnitudeReactivePolicy()]
 
 

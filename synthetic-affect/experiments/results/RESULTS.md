@@ -8,20 +8,30 @@
 
 ## Method, in one paragraph
 
-Every agent sees the same observation each turn — expected state and actual state — and submits one strategy from the shared vocabulary. A run ends at resolution or at the 20-turn cap (DNF). Stateless agents are pure functions of the current observation, asserted by test. The stateless registry contains every constant policy, one per strategy, plus a magnitude-reactive policy that uses everything the current observation offers; the comparison below is against the **best stateless result per task**, which is maximally adversarial to the loop, since a constant policy may be pre-tuned to any single task.
+Every agent sees the same observation each turn — expected state and actual state — and submits one strategy from the shared vocabulary. A run ends at resolution or at the 20-turn cap (DNF). Stateless agents are pure functions of the current observation, asserted by test. The stateless registry contains every constant policy, one per strategy, plus a magnitude-reactive policy that uses everything the current observation offers; the comparison below is against the **best stateless result per task**, which is maximally adversarial to the loop, since a constant policy may be pre-tuned to any single task. One further agent, `tuned_lookup`, is stateless but **task-informed** — a lookup table built from each task's definition. It is excluded from the best-stateless comparison and reported as a ceiling: what full task knowledge buys a stateless agent.
 
 ## Turns to resolution
 
-| task | loop | loop_stall_blind | always_stop | always_ask | always_rephrase | always_switch_tool | always_escalate | magnitude_reactive |
-|---|---|---|---|---|---|---|---|---|
-| single_question | 1 | 1 | DNF | 1 | DNF | DNF | DNF | 1 |
-| repeated_query_needs_tool | 3 | 3 | DNF | DNF | DNF | 1 | DNF | DNF |
-| escalation_ladder | 4 | 4 | DNF | DNF | DNF | DNF | 1 | DNF |
-| converging_refinement | 3 | DNF | DNF | DNF | DNF | DNF | DNF | 3 |
-| deploy_rollback | 3 | 3 | DNF | DNF | DNF | DNF | DNF | DNF |
-| strict_interview | DNF | DNF | DNF | 2 | DNF | DNF | DNF | DNF |
+| task | loop | loop_stall_blind | always_stop | always_ask | always_rephrase | always_switch_tool | always_escalate | magnitude_reactive | tuned_lookup |
+|---|---|---|---|---|---|---|---|---|---|
+| single_question | 1 | 1 | DNF | 1 | DNF | DNF | DNF | 1 | 1 |
+| repeated_query_needs_tool | 3 | 3 | DNF | DNF | DNF | 1 | DNF | DNF | 1 |
+| escalation_ladder | 4 | 4 | DNF | DNF | DNF | DNF | 1 | DNF | 1 |
+| converging_refinement | 3 | DNF | DNF | DNF | DNF | DNF | DNF | 3 | 3 |
+| deploy_rollback | 3 | 3 | DNF | DNF | DNF | DNF | DNF | DNF | DNF |
+| strict_interview | DNF | DNF | DNF | 2 | DNF | DNF | DNF | DNF | 2 |
 
-**Tasks resolved:** loop 5/6 · loop_stall_blind 4/6 · always_stop 0/6 · always_ask 2/6 · always_rephrase 0/6 · always_switch_tool 1/6 · always_escalate 1/6 · magnitude_reactive 2/6
+**Tasks resolved:** loop 5/6 · loop_stall_blind 4/6 · always_stop 0/6 · always_ask 2/6 · always_rephrase 0/6 · always_switch_tool 1/6 · always_escalate 1/6 · magnitude_reactive 2/6 · tuned_lookup 5/6
+
+## The honest aggregates — all of them
+
+Adversarial review caught an earlier draft of the surrounding documents quoting only the first of these, the one that most flatters the loop. They stand together or not at all:
+
+- **Best single task-agnostic stateless policy: 2/6 resolved** — no one fixed stateless policy adapts across the suite.
+- **Per-task best-stateless portfolio: 5/6** — allowed a different stateless policy per task, statelessness matches the loop's resolved count everywhere except deploy_rollback.
+- **Tasks where the loop is strictly faster than the best stateless: 0 of 6.** The loop never wins on raw speed; it wins on resolving with one policy and no task knowledge.
+- **Task-informed stateless ceiling (`tuned_lookup`): 5/6**, faster-or-equal to the loop on every task both resolve, DNF only on deploy_rollback — the one task where no observation→strategy table can exist.
+- **What state uniquely buys, on this suite:** resolving 5/6 with a single policy and no task knowledge, and the only resolution of deploy_rollback.
 
 ## Loop vs best stateless, per task
 
@@ -60,7 +70,7 @@ Every agent sees the same observation each turn — expected state and actual st
 ## Caveats, stated rather than buried
 
 - The task suite is experimenter-chosen. It includes controls, ties, and a task the loop loses, but the selection is still part of the design. Criticism of the suite is invited; add a task and rerun.
-- Stateless baselines are task-agnostic. A lookup table tuned to one task can solve any deterministic task **except** deploy_rollback, where identical observations require different actions.
+- The task-agnostic baselines are not exhaustive. Review brute-forced all magnitude→strategy maps and found one resolving 3/6 — stronger than magnitude_reactive's 2/6, though suite-tuned, changing no per-task best and no verdict (pinned by test). The tuned_lookup ceiling bounds the whole class: stateless with full task knowledge reaches 5/6 and never deploy_rollback.
 - Nothing here involves a language model. The LLM Core remains a deterministic stub; these are properties of the control loop.
 
 ---

@@ -90,21 +90,33 @@ involved. The predictions as claims about real LLM workloads remain Vision.**
 **1. A system with a Gap Detector and a Closure Policy resolves repeated
 queries in fewer turns than a stateless baseline on the same task set.**
 
-*Tested in-sim, 12 August 2026 — supported, with a precise shape.* On the
-six-task suite the loop resolves 5/6; no single stateless policy resolves more
-than 2/6. On the repeated-query task itself the loop closes in 3 turns while
-every task-agnostic stateless policy fails to close at all — infinitely many
-turns is fewer than three by any accounting. Two honest qualifications. First,
-a constant policy *pre-tuned to one task* beats the loop on that task
-(`always_switch_tool` closes the repeated query in 1 turn — then resolves
-almost nothing else). State buys adaptivity across a task set, not victory on
-every task. Second, one suite task, `strict_interview`, defeats the v0.1
-closure policy outright where plain `always_ask` resolves it in 2 — a measured
-limitation, kept in the suite and pinned by a test. And one result is a
-construction rather than a statistic: `deploy_rollback` presents byte-identical
-observations that require different strategies, so **no** function of the
-current observation can solve it, tuned or not; the loop resolves it in 3 turns
-through its history. That is postulate 1 operationalised.
+*Tested in-sim, 12 August 2026 — supported in one precise sense, not
+supported in another, and both are stated.* The full aggregate set, in one
+place, because quoting only the favourable ones is how a benchmark lies:
+
+- The loop resolves **5/6** with one policy and no task knowledge.
+- The best **single** task-agnostic stateless policy resolves **2/6**.
+- The per-task **best-stateless portfolio** — a different stateless policy
+  allowed per task — also resolves **5/6**, and the loop is strictly faster
+  than the best stateless on **zero** tasks.
+- A **task-informed** stateless lookup (`tuned_lookup`, built from each
+  task's definition) resolves **5/6**, faster-or-equal to the loop on every
+  task both resolve, and fails only `deploy_rollback`.
+
+So the supported claim is adaptivity, not speed: one stateful policy matches
+the entire stateless portfolio without task knowledge, and wins outright only
+where no stateless policy can exist at all. On the repeated-query task the
+loop closes in 3 turns; of the six task-agnostic baselines, five never close
+it, and the sixth — the constant whose fixed strategy happens to be the
+answer — closes it in 1 turn and resolves nothing else in the suite. One
+suite task, `strict_interview`, defeats the v0.1 closure policy outright
+where plain `always_ask` resolves it in 2 — a measured limitation, kept in
+the suite and pinned by a test. And one result is a construction rather than
+a statistic: `deploy_rollback` presents byte-identical observations that
+require different strategies, so **no** function of the current observation
+can solve it, tuned or not — verified by exhausting all 25 observation→
+strategy tables; the loop resolves it in 3 turns through its history. That is
+postulate 1 operationalised.
 
 **2. Closure success rate rises when the Affect Model can distinguish
 `converging` from `stalled`, because the policy stops retrying a route that is
@@ -152,7 +164,11 @@ produce evidence, that column stays labelled as what it is.
 
 - Define Synthetic Affect explicitly as apparent / functional affect, for design
   purposes only.
-- Lead with the falsifiable predictions, and concede that they are untested.
+- Lead with the falsifiable predictions, and concede exactly what has been
+  tested: a scripted, deterministic environment. On real LLM workloads they
+  remain untested — and concede the adverse results too, by name: the loop is
+  never strictly faster than the best stateless policy per task, and one task
+  defeats it.
 - Concede prior art directly. A narrow claim that survives scrutiny beats a broad
   one that dies on contact.
 - Keep the ethical requirement in the text, not in a footnote: if the behaviour

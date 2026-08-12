@@ -41,9 +41,11 @@ none was.
 |---|---|
 | `closed` | no gap this cycle, or no history at all |
 | `reopened` | a gap this cycle, none last cycle |
-| `stalled` | three consecutive gaps against the same expectation, with no progress this cycle |
 | `converging` | this gap's magnitude is smaller than last cycle's |
+| `stalled` | three consecutive gaps against the same expectation, with no progress this cycle |
 | `uncertain` | a gap that is not narrowing and not yet a run |
+
+The rows above are in check order — precedence reads top to bottom.
 
 Order matters: `closed` → `reopened` → `converging` → `stalled` → `uncertain`.
 Converging is checked before stalled, deliberately: a same-goal run whose
