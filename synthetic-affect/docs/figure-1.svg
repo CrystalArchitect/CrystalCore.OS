@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" role="img" aria-labelledby="fig1-title fig1-desc">
+  <title id="fig1-title">Figure 1 — Synthetic Affect Theory Stack</title>
+  <desc id="fig1-desc">Two columns. Left, Software Today (simulated affect): Persistent State Store, Affect Model, Gap Detector, Closure Policy, LLM Core, with a feedback arrow from the LLM Core back to the state store. Right, Hardware Future (grounded drives), unbuilt: Sensors, Homeostatic Loops, Local Persistent Compute, Actuators. A dashed arrow runs from the left column to the right.</desc>
+
+  <style>
+    .bg    { fill: #ffffff; }
+    .h1    { font: 600 23px system-ui, sans-serif; fill: #14151a; }
+    .col   { font: 600 15px system-ui, sans-serif; fill: #14151a; }
+    .sub   { font: 400 12px system-ui, sans-serif; fill: #5c6070; }
+    .box   { fill: #eef2f9; stroke: #b3c0d6; stroke-width: 1.2; }
+    .lbl   { font: 400 14px system-ui, sans-serif; fill: #14151a; }
+    .lbl2  { font: 400 11.5px system-ui, sans-serif; fill: #5c6070; }
+    .foot  { font: 400 10.5px system-ui, sans-serif; fill: #6b7080; }
+    .flow  { stroke: #14151a; stroke-width: 1.6; fill: none; }
+    .bridge{ stroke: #8b93a7; stroke-width: 1.6; fill: none; stroke-dasharray: 7 5; }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="900" height="560"/>
+
+  <text class="h1" x="450" y="36" text-anchor="middle">Synthetic Affect Theory Stack</text>
+  <text class="sub" x="450" y="56" text-anchor="middle">Implementation: CrystalCore.OS · Language: CrystalCode · Functional / simulated affect only</text>
+
+  <!-- crystal mark -->
+  <polygon points="450,74 478,90 478,122 450,138 422,122 422,90" fill="#a88ed1" stroke="#14151a" stroke-width="2"/>
+  <polygon points="450,82 466,106 434,106" fill="#d8cbee" stroke="#14151a" stroke-width="1"/>
+
+  <line x1="40" y1="152" x2="860" y2="152" stroke="#dde3ee" stroke-width="1"/>
+
+  <text class="col" x="220" y="176" text-anchor="middle">Software Today (Simulated Affect)</text>
+  <text class="col" x="680" y="176" text-anchor="middle">Hardware Future (Grounded Drives)</text>
+  <text class="sub" x="680" y="194" text-anchor="middle">Vision — not built</text>
+
+  <!-- left column: 5 boxes, pitch 58, top 200 -->
+  <rect class="box" x="40"  y="200" width="360" height="46" rx="9"/>
+  <text class="lbl" x="220" y="228" text-anchor="middle">Persistent State Store</text>
+
+  <rect class="box" x="40"  y="258" width="360" height="46" rx="9"/>
+  <text class="lbl" x="220" y="280" text-anchor="middle">Affect Model</text>
+  <text class="lbl2" x="220" y="296" text-anchor="middle">classifier — a signal, not a feeling</text>
+
+  <rect class="box" x="40"  y="316" width="360" height="46" rx="9"/>
+  <text class="lbl" x="220" y="338" text-anchor="middle">Gap Detector</text>
+  <text class="lbl2" x="220" y="354" text-anchor="middle">Gap = Expected − Actual</text>
+
+  <rect class="box" x="40"  y="374" width="360" height="46" rx="9"/>
+  <text class="lbl" x="220" y="402" text-anchor="middle">Closure Policy</text>
+
+  <rect class="box" x="40"  y="432" width="360" height="46" rx="9"/>
+  <text class="lbl" x="220" y="454" text-anchor="middle">LLM Core</text>
+  <text class="lbl2" x="220" y="470" text-anchor="middle">v0.1: deterministic offline stub, no model</text>
+
+  <!-- flow arrows down the left column -->
+  <path class="flow" d="M220 246 L220 254" marker-end="url(#tip)"/>
+  <path class="flow" d="M220 304 L220 312" marker-end="url(#tip)"/>
+  <path class="flow" d="M220 362 L220 370" marker-end="url(#tip)"/>
+  <path class="flow" d="M220 420 L220 428" marker-end="url(#tip)"/>
+
+  <!-- feedback: LLM Core back up to the state store -->
+  <path class="flow" d="M40 455 L22 455 Q12 455 12 445 L12 233 Q12 223 22 223 L36 223" marker-end="url(#tip)"/>
+
+  <!-- right column: 4 boxes -->
+  <rect class="box" x="500" y="200" width="360" height="46" rx="9"/>
+  <text class="lbl" x="680" y="228" text-anchor="middle">Sensors (camera, mic, touch, battery)</text>
+
+  <rect class="box" x="500" y="258" width="360" height="46" rx="9"/>
+  <text class="lbl" x="680" y="280" text-anchor="middle">Homeostatic Loops</text>
+  <text class="lbl2" x="680" y="296" text-anchor="middle">power, heat, balance</text>
+
+  <rect class="box" x="500" y="316" width="360" height="46" rx="9"/>
+  <text class="lbl" x="680" y="338" text-anchor="middle">Local Persistent Compute</text>
+  <text class="lbl2" x="680" y="354" text-anchor="middle">edge / neuromorphic</text>
+
+  <rect class="box" x="500" y="374" width="360" height="46" rx="9"/>
+  <text class="lbl" x="680" y="402" text-anchor="middle">Actuators</text>
+
+  <path class="flow" d="M680 246 L680 254" marker-end="url(#tip)"/>
+  <path class="flow" d="M680 304 L680 312" marker-end="url(#tip)"/>
+  <path class="flow" d="M680 362 L680 370" marker-end="url(#tip)"/>
+
+  <!-- the bridge between simulation and grounding -->
+  <path class="bridge" d="M404 339 L492 339" marker-end="url(#tipgrey)"/>
+  <text class="sub" x="448" y="330" text-anchor="middle">grounds in</text>
+
+  <text class="foot" x="40" y="516">Figure 1: Synthetic Affect Theory Stack — software simulation (left) grounds in hardware regulation (right).</text>
+  <text class="foot" x="40" y="532">Synthetic = apparent / functional, for design purposes. Not a claim of feeling, consciousness, or inner experience.</text>
+  <text class="foot" x="40" y="548">TerAustralis Incognita™ — ABN 70 741 068 059</text>
+
+  <defs>
+    <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#14151a"/>
+    </marker>
+    <marker id="tipgrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b93a7"/>
+    </marker>
+  </defs>
+</svg>
