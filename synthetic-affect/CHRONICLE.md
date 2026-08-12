@@ -69,6 +69,83 @@ are now recorded as failures.
 **Still Vision, still unbuilt.** The hardware column. The stateless-baseline
 comparison harness — until it exists, "fewer turns than a stateless baseline"
 is a prediction and is labelled one in `THEORY.md`.
+*(Superseded the same day — see the next entry. The harness now exists; the
+hardware column remains Vision.)*
+
+---
+
+## 2026-08-12 — the prediction-1 harness, and the defect it caught first
+
+**Evidence.** Before the harness could run, hand-tracing the loop through its
+converging task exposed an ordering defect in the shipped classifier:
+`AffectModel.classify` checked `stalled` before `converging`, so a run of three
+same-goal gaps with *falling* magnitudes — `[1.0, 0.67, 0.33]`, a system
+visibly making progress — was labelled `stalled`. The policy would abandon a
+strategy that was working. The classifier's own docstring defines stalled as
+"nothing is moving"; the implementation contradicted its spec, and the 30-test
+suite missed it because no test fed a shrinking three-gap run.
+
+**Interpretation.** The defect is precisely the failure prediction 2 names:
+without a working converging/stalled distinction, closure gets worse. It also
+shows why the harness had to exist — the examples exercise happy paths; only an
+adversarial task set walks the label space hard enough to catch this.
+
+**Experiment.** Fixed the ordering (converging before stalled; committed
+example logs verified byte-identical, since neither example produces the
+shape). Then built `experiments/`: a six-task deterministic suite — including
+a control anyone ties, a task designed for the loop to *lose*, and a task
+constructed to be unsolvable without state — against six task-agnostic
+stateless baselines (every constant policy plus a magnitude-reactive one), the
+shipped loop, and a stall-blind ablation carrying the pre-fix classifier.
+Stateless purity is asserted by test; the committed results are asserted equal
+to a fresh run by test.
+
+**Record.** Measured on this machine, 12 August 2026 — 42 tests green:
+
+- **Loop: 5/6 resolved with one policy and no task knowledge.** Best single
+  task-agnostic stateless policy: 2/6. Per-task best-stateless portfolio:
+  5/6, and the loop is strictly faster than the best stateless on zero
+  tasks — the supported claim is adaptivity, not speed. Repeated-query task:
+  loop 3 turns; five of the six task-agnostic baselines never close it; the
+  sixth, the constant whose fixed strategy happens to be the answer, closes
+  it in 1 and resolves nothing else in the suite.
+- **`deploy_rollback`: loop 3 turns; all stateless DNF — by construction.**
+  The observations at the two decision points are byte-identical and the
+  required strategies differ, so no function of the current observation can
+  solve it. Postulate 1 as a theorem about the task, not a benchmark score.
+- **Ablation (prediction 2): stall-blind loop 4/6**, converging task DNF,
+  closure rate 0.0 where the sighted loop measures 0.33.
+- **No-store condition (prediction 3): `magnitude_reactive` 2/6** — the loop's
+  per-observation knowledge minus history keeps only the tasks where the
+  signal is in the observation.
+- **Honest losses, pinned by tests:** `strict_interview` defeats the loop
+  (converging → rephrase, no route back to ask) where `always_ask` resolves in
+  2 — a v0.1 closure-policy limitation now on the record. And per-task
+  pre-tuned constants beat the loop on their own task (`always_switch_tool` in
+  1 turn) while resolving almost nothing else.
+
+Scope, restated: a scripted, deterministic environment, no language model. The
+predictions as claims about real LLM workloads remain Vision.
+
+**Adversarial review, same day.** Three independent reviewers were set on the
+harness with instructions to refute. Zero blocking findings; the impossibility
+construction, the honest-loss task, turn-charging symmetry and byte
+reproducibility all verified — including exhausting all 25 observation→strategy
+tables against `deploy_rollback` (none solves it) and re-running the harness
+under varied hash seeds (byte-identical). But the review caught **this
+document's own prose committing the failure the harness exists to prevent**,
+and the entry above is the corrected version. As first written it said "best
+stateless: 2/6" — the one aggregate that flatters the loop — and "every
+task-agnostic stateless policy DNF" on the repeated-query task, a false
+universal: `always_switch_tool` is task-agnostic by this entry's own
+definition and closes that task in 1 turn. The review also built the
+`tuned_lookup` ceiling (task-informed stateless, 5/6, fails only
+`deploy_rollback`), now adopted into the harness so the fact stays committed
+and pinned; found a suite-tuned magnitude map resolving 3/6 (recorded as a
+caveat, changes no verdicts, pinned by test); and had the byte-reproducibility
+claim made platform-honest by pinning `newline` in every writer. The
+corrections were made the same day, before merge, and this paragraph is the
+record that they were needed.
 
 ---
 

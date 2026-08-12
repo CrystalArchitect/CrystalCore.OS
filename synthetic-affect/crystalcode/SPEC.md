@@ -41,11 +41,17 @@ none was.
 |---|---|
 | `closed` | no gap this cycle, or no history at all |
 | `reopened` | a gap this cycle, none last cycle |
-| `stalled` | three consecutive gaps against the same expectation |
 | `converging` | this gap's magnitude is smaller than last cycle's |
+| `stalled` | three consecutive gaps against the same expectation, with no progress this cycle |
 | `uncertain` | a gap that is not narrowing and not yet a run |
 
-Order matters: `closed` → `reopened` → `stalled` → `converging` → `uncertain`.
+The rows above are in check order — precedence reads top to bottom.
+
+Order matters: `closed` → `reopened` → `converging` → `stalled` → `uncertain`.
+Converging is checked before stalled, deliberately: a same-goal run whose
+magnitude is falling is progress, and labelling it stalled would route the
+policy away from a strategy that is working. The experiment harness caught an
+earlier ordering doing exactly that — `CHRONICLE.md`, 2026-08-12.
 
 **Every label must be reachable.** `tests/test_affect.py` asserts the set of
 labels the model can actually emit equals `LABELS`, so a dead branch fails the

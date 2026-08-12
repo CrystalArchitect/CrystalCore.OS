@@ -78,21 +78,66 @@ Because each one logs, the loop becomes **measurable**: gap openings, labels,
 closure attempts, and — critically — whether each closure attempt actually
 worked. See [`crystalcode/SPEC.md`](crystalcode/SPEC.md).
 
-## Falsifiable predictions
+## Falsifiable predictions — and what the harness measured
 
-**Belt: Vision. None of these has been tested here.** They are written to be
-refutable, and a fair test could refute them.
+Each prediction is stated, then what has actually been tested. The tests live
+in [`experiments/`](experiments/) and their committed results in
+[`experiments/results/RESULTS.md`](experiments/results/RESULTS.md); rerun with
+`python3 -m experiments.harness`. **Scope, stated plainly: these are
+measurements of a scripted, deterministic environment. No language model is
+involved. The predictions as claims about real LLM workloads remain Vision.**
 
-1. A system with a Gap Detector and a Closure Policy resolves repeated queries
-   in **fewer turns** than a stateless baseline on the same task set.
-2. Closure success rate **rises** when the Affect Model can distinguish
-   `converging` from `stalled`, because the policy stops retrying a route that
-   is not narrowing the gap.
-3. Removing the Persistent State Store collapses prediction 1 entirely — the
-   advantage is a function of state, not of the labels.
+**1. A system with a Gap Detector and a Closure Policy resolves repeated
+queries in fewer turns than a stateless baseline on the same task set.**
 
-The harness for prediction 1 is not written. Until it is, prediction 1 is a
-prediction.
+*Tested in-sim, 12 August 2026 — supported in one precise sense, not
+supported in another, and both are stated.* The full aggregate set, in one
+place, because quoting only the favourable ones is how a benchmark lies:
+
+- The loop resolves **5/6** with one policy and no task knowledge.
+- The best **single** task-agnostic stateless policy resolves **2/6**.
+- The per-task **best-stateless portfolio** — a different stateless policy
+  allowed per task — also resolves **5/6**, and the loop is strictly faster
+  than the best stateless on **zero** tasks.
+- A **task-informed** stateless lookup (`tuned_lookup`, built from each
+  task's definition) resolves **5/6**, faster-or-equal to the loop on every
+  task both resolve, and fails only `deploy_rollback`.
+
+So the supported claim is adaptivity, not speed: one stateful policy matches
+the entire stateless portfolio without task knowledge, and wins outright only
+where no stateless policy can exist at all. On the repeated-query task the
+loop closes in 3 turns; of the six task-agnostic baselines, five never close
+it, and the sixth — the constant whose fixed strategy happens to be the
+answer — closes it in 1 turn and resolves nothing else in the suite. One
+suite task, `strict_interview`, defeats the v0.1 closure policy outright
+where plain `always_ask` resolves it in 2 — a measured limitation, kept in
+the suite and pinned by a test. And one result is a construction rather than
+a statistic: `deploy_rollback` presents byte-identical observations that
+require different strategies, so **no** function of the current observation
+can solve it, tuned or not — verified by exhausting all 25 observation→
+strategy tables; the loop resolves it in 3 turns through its history. That is
+postulate 1 operationalised.
+
+**2. Closure success rate rises when the Affect Model can distinguish
+`converging` from `stalled`, because the policy stops retrying a route that is
+not narrowing the gap.**
+
+*Tested in-sim by ablation — supported.* The `loop_stall_blind` ablation runs
+the identical loop with a classifier that checks stalled before converging, so
+a same-goal run with falling magnitude reads as stalled. It resolves 4/6 to
+the loop's 5/6, failing the converging task outright (closure rate 0.0 where
+the sighted loop measures 0.33). Building this ablation is also how a real
+ordering defect in the shipped classifier was found and fixed — see
+CHRONICLE.md, 2026-08-12.
+
+**3. Removing the Persistent State Store collapses prediction 1 entirely — the
+advantage is a function of state, not of the labels.**
+
+*Tested in-sim — supported.* The `magnitude_reactive` baseline is exactly the
+loop's per-observation knowledge with the history removed: it reads the current
+gap and its magnitude, and nothing else. It resolves 2/6 — the control task and
+the one task where progress is visible in the observation itself — and fails
+every task where the signal lives in the history.
 
 ## Two failure modes the theory has to guard against
 
@@ -119,7 +164,11 @@ produce evidence, that column stays labelled as what it is.
 
 - Define Synthetic Affect explicitly as apparent / functional affect, for design
   purposes only.
-- Lead with the falsifiable predictions, and concede that they are untested.
+- Lead with the falsifiable predictions, and concede exactly what has been
+  tested: a scripted, deterministic environment. On real LLM workloads they
+  remain untested — and concede the adverse results too, by name: the loop is
+  never strictly faster than the best stateless policy per task, and one task
+  defeats it.
 - Concede prior art directly. A narrow claim that survives scrutiny beats a broad
   one that dies on contact.
 - Keep the ethical requirement in the text, not in a footnote: if the behaviour

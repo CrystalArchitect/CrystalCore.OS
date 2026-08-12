@@ -21,10 +21,11 @@ inner experience.
 ```bash
 cd synthetic-affect
 python3 -m core.selftest                  # exact assertions, exit 0
-python3 -m pytest tests -q                # 30 tests
+python3 -m pytest tests -q                # 45 tests
 python3 examples/01_repeated_query.py     # regenerates its own log
 python3 examples/02_gap_reopens.py
-git diff --stat examples/logs/            # empty — the logs are outputs
+python3 -m experiments.harness            # regenerates the prediction-1 results
+git diff --stat examples/logs/ experiments/results/   # empty — outputs, not prose
 ```
 
 That last line is the check that matters. `examples/logs/*.jsonl` are committed
@@ -40,12 +41,20 @@ log carries a wall clock. If a fresh run changes them, they were never outputs.
 - Five affect labels, every one reachable and asserted so by the test suite
 - Closure decisions judged by the *following* cycle, so closure success rate is a
   measurement rather than a self-report
+- **The prediction-1 harness** — the loop against stateless baselines on a
+  six-task scripted suite, controls and loop-losing tasks included. Loop 5/6
+  with one policy and no task knowledge; best single stateless 2/6; the
+  per-task best-stateless portfolio also reaches 5/6 and the loop is never
+  strictly faster than it — the measured advantage is adaptivity, not speed.
+  One task is provably unsolvable without state; one task the loop honestly
+  loses. All aggregates, including the adverse ones, in
+  [`experiments/results/RESULTS.md`](experiments/results/RESULTS.md)
 
 **Belt: Vision — designed, not built.**
 
 - The hardware column of Figure 1. No sensors, no actuators, no homeostatic loops
-- The claim that this beats a stateless baseline on real tasks. The comparison
-  harness is not written; until it is, that is a prediction, not a result
+- The predictions as claims about **real LLM workloads**. The harness measures a
+  scripted, deterministic environment; nothing in it involves a language model
 
 **Stated plainly so the figure does not overclaim:** the LLM Core in v0.1 is a
 **deterministic offline stub**. No model, no network. It is what makes the logs
@@ -72,7 +81,8 @@ core/          state · gap · affect · closure · loop · crystalcode · log �
 crystalcode/   SPEC.md — the primitive contract
 docs/          figure-1.svg · FIGURE-1.md · GLOSSARY.md
 examples/      two runnable scenarios, with their committed logs
-tests/         30 tests
+experiments/   the prediction-1 harness — tasks · agents · results
+tests/         45 tests
 ```
 
 ## Licence

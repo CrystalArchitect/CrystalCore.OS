@@ -55,3 +55,18 @@ def test_every_label_is_reachable():
         m.classify([g(0.5), g(1.0, gid=2)]),
     }
     assert reached == set(LABELS)
+
+
+def test_converging_wins_over_stalled_when_magnitude_shrinks():
+    # Three same-goal gaps whose magnitude is falling is progress, not a
+    # stall. An earlier ordering checked stalled first and mislabelled this
+    # exact shape; the experiment harness caught it (CHRONICLE, 2026-08-12).
+    m = AffectModel()
+    hist = [g(1.0, gid=1), g(0.67, gid=2), g(0.33, gid=3)]
+    assert m.classify(hist) == "converging"
+
+
+def test_stalled_still_fires_on_a_flat_run():
+    m = AffectModel()
+    hist = [g(1.0, gid=1), g(1.0, gid=2), g(1.0, gid=3)]
+    assert m.classify(hist) == "stalled"

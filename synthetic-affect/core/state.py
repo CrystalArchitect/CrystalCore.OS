@@ -70,7 +70,9 @@ class PersistentStateStore:
             "history": self.history,
         }
         self.path.write_text(
-            json.dumps(payload, sort_keys=True, indent=2), encoding="utf-8"
+            json.dumps(payload, sort_keys=True, indent=2),
+            encoding="utf-8",
+            newline="\n",
         )
 
     def load(self) -> None:
