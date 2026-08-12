@@ -22,6 +22,28 @@ measurement's clothes, so every line the boot prints carries a belt tag:
 `emit()` throws on an unlabelled line, the way `BusHub.validate` rejects
 unlabelled speech on the bus. There is no code path that prints an unbelted line.
 
+## Synthetic Affect Theory™ — the reference loop
+
+`synthetic-affect/` holds the runnable v0.1 of Synthetic Affect Theory: a design
+theory that if you give a system persistent state, a gap detector, and a closure
+policy, its observable behaviour exhibits functional patterns that look like
+affect — with no claim about inner experience.
+
+> Synthetic = apparent / functional, for design purposes. Not a claim of feeling,
+> consciousness, or inner experience.
+
+Same discipline as the boot screen above: what runs is labelled science, what is
+designed is labelled vision, and the committed logs are outputs you can
+reproduce.
+
+```bash
+cd synthetic-affect
+python3 -m core.selftest && python3 -m pytest tests -q
+```
+
+See [`synthetic-affect/README.md`](synthetic-affect/README.md) and
+[`THEORY.md`](synthetic-affect/THEORY.md).
+
 ## Features
 
 - Belted kernel-log boot screen with animated crystal core logo — skippable with
