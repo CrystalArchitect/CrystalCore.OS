@@ -47,14 +47,20 @@ class AffectModel:
         if previous is None and len(history) > 1:
             return "reopened"
 
-        # A run of gaps against the same expectation: nothing is moving.
+        # Gap shrinking cycle on cycle: progress, keep going. Checked before
+        # stalled, deliberately: a run of same-goal gaps whose magnitude is
+        # falling is a system making progress, and calling it stalled would
+        # route the policy away from a strategy that is working. An earlier
+        # ordering did exactly that, and the experiment harness caught it —
+        # see CHRONICLE.md, 2026-08-12.
+        if previous is not None and current.magnitude < previous.magnitude:
+            return "converging"
+
+        # A run of gaps against the same expectation, with no progress this
+        # cycle: nothing is moving.
         tail = history[-STALL_RUN:]
         if len(tail) == STALL_RUN and all(g is not None for g in tail):
             if len({repr(g.expected) for g in tail}) == 1:
                 return "stalled"
-
-        # Gap shrinking cycle on cycle: progress, keep going.
-        if previous is not None and current.magnitude < previous.magnitude:
-            return "converging"
 
         return "uncertain"

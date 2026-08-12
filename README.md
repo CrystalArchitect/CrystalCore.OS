@@ -39,6 +39,7 @@ reproduce.
 ```bash
 cd synthetic-affect
 python3 -m core.selftest && python3 -m pytest tests -q
+python3 -m experiments.harness   # the loop vs stateless baselines, measured
 ```
 
 See [`synthetic-affect/README.md`](synthetic-affect/README.md) and
