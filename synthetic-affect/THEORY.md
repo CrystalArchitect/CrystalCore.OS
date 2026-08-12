@@ -174,6 +174,45 @@ produce evidence, that column stays labelled as what it is.
 - Keep the ethical requirement in the text, not in a footnote: if the behaviour
   looks affective, label it synthetic.
 
+### Dated note — 2026-08-13
+
+Parked here as **method**, not as a fifth postulate. The four postulates
+above are unchanged.
+
+**What a defence can say**
+
+1. Synthetic = functional, never inner.
+2. Left column of Figure 1: 5/6 vs 2/6, adaptivity not speed. Concede
+   `strict_interview`, and that the loop is never strictly faster than the
+   per-task best stateless. `deploy_rollback` is the construction only
+   history can solve.
+3. Right column: Vision. Unbuilt.
+4. The method of writing is load-bearing: Belt-Three, chronicle form,
+   pending-then-judge, logs with no wall clock.
+5. Prior art conceded (machine psychology, robopsychology, artificial
+   psychology).
+
+**What it cannot say:** hardware drives as measured; the predictions as
+claims about real LLM workloads; SAT as feeling or consciousness;
+Country; a partnership with any model vendor.
+
+**Why the figure needs the stub label.** The LLM Core box is a
+deterministic offline stub. Its output is not fed into the next `actual`.
+The return arrow is architecture; reading it as Science overclaims. See
+[`docs/FIGURE-1.md`](docs/FIGURE-1.md).
+
+**Why `PASS — uncertain` was a scandal.** An earlier classifier asked
+whether a gap had *ever* existed, so `closed` was unreachable and a
+selftest could still print PASS. The rebuild classifies the tail,
+persists state, and lets the next cycle judge. The harness then caught
+stalled-before-converging. That order (converging first) is law on this
+tree.
+
+**Not this thesis.** `mythos/art` has its own catalogue. SAT classifies
+gap history, not images. *Official* here means the public artefact
+(this page, the figure, the committed logs) written so it can be
+defended — not a grading of the visual canon.
+
 ---
 
 **All rights reserved.**
