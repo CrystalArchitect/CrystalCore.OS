@@ -242,6 +242,52 @@ RESULTS.md}` re-run and diffed against the pre-change committed baseline —
 staging this commit; `grep -rnE "[A-Za-z0-9]®" . --exclude-dir=.git` →
 nothing.
 
+## 2026-08-14 — the grant: G2, split decided, this directory retired
+
+**Evidence.** Every prior entry in this file restated the same open
+question — "which package is law remains open" — five times across two
+days, through a defect this repo caught and the other shipped anyway, and
+a full bidirectional reconciliation that made the two byte-for-byte
+equivalent in capability. The maintainer's decision: **G2 — grant the
+split.** `CrystalArchitect/Synthetic-Affect-Theory-` becomes the theory's
+canonical home; this directory is retired to a pointer.
+
+**Interpretation.** The reconciliation work that preceded this entry
+wasn't wasted by the grant — it's why the grant was safe to make now
+rather than earlier. Granting the split when the dedicated repository was
+a one-line stub (as it was when this file's first entries were written)
+would have meant starting over somewhere new. Granting it after PR #1
+shipped two defects this package had already fixed would have meant
+canonising a regression. Granting it now, once both copies passed the
+same tests with the same numbers, means the theory doesn't lose anything
+in the move. The rename to drop the dedicated repository's trailing
+hyphen is part of the grant but is a manual step in that repository's own
+settings — not done as part of this commit, and this file does not claim
+otherwise.
+
+**Experiment.** `core/`, `tests/`, `experiments/`, `examples/`,
+`crystalcode/`, `docs/` (including the just-ported `lyrics/`), `THEORY.md`,
+and `conftest.py` removed from this directory — all of it stays in this
+repository's git history, none of it is deleted from the record.
+`README.md` rewritten as a pointer to the new home, stating plainly what
+used to be here and why it was retired rather than left live. This file
+and `ATTRIBUTION.md` are the only files kept, unedited except for this
+entry — the permanent record of what happened in this directory, which
+the new home's own `CHRONICLE.md` does not and should not restate from
+its own landing entry onward.
+
+**Record.** No `python3 -m pytest` or `core.selftest` to run — there is no
+code left in this directory to verify. The verification that matters is
+upstream of this commit: `Synthetic-Affect-Theory-#5`'s own numbers (31
+tests passed, harness matching this package's numbers task for task) are
+what the grant relies on, and they were measured before the grant, not
+after. Cross-repository references checked before this commit:
+`TerAustralis-Incognita` has none (grepped, none found — an earlier,
+unverified report claiming otherwise did not hold up). `TheCrystalVision/
+interface/map.json` did have one — a `"CANON"`-badged entry naming this
+directory as the canonical home — corrected in the same pass as this
+retirement, in that repository.
+
 ---
 
 **All rights reserved.**
