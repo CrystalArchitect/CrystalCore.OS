@@ -149,5 +149,47 @@ record that they were needed.
 
 ---
 
+## 2026-08-14 — the split landed; this package is unchanged, and still diverges from it
+
+**Evidence.** `CrystalArchitect/Synthetic-Affect-Theory-` — a dedicated repository
+that existed only as a one-line stub README when this project's SAT-split
+question was first raised — now holds a real, merged copy of this package:
+`PR #1` (2026-08-12) landed a ~20-file public v0.1 stack; `PR #2` (2026-08-12)
+found and ported this package's own already-fixed classifier-ordering defect
+(`stalled` checked before `converging`) after PR #1 shipped it a second time,
+unaware this package's fix already existed; `PR #3` (2026-08-14) found and
+fixed a defect this package does not have: `ClosureDecision.outcome` was
+stamped at decide-time instead of defaulting to `"pending"` and being judged
+by the following cycle, and `Loop` had no judging mechanism at all — the exact
+cosmetic-closure failure `core/closure.py` in this package names by example.
+None of PR #1–#3 touched this directory. No grant letter (G1/G2/H) has been
+given for the split itself; it happened as a landed PR, not a decision.
+
+**Interpretation.** Two homes of the same theory now both run, both pass
+their own test suites, and still diverge in scope, not just in the defects
+above. Present here, absent there: `experiments/` (the prediction-1 harness,
+`RESULTS.md`, the adversarial-review record), `docs/GLOSSARY.md`,
+`docs/FIGURE-1.md`, this file's own 2026-08-13 thesis-defence note in
+`THEORY.md`. Present there, absent here: `docs/ai/` (AI contributor
+credits), `docs/lyrics/` (the Sovereign Gap Held and Bridge, Not Loop
+pages), a windowed `AffectModel` (F6, `window=10`) bounding classification
+to a trailing slice rather than full history, and an explicit
+`ClosurePolicy.reset()`. Which package is law remains open — restated, not
+resolved, from the 2026-08-12 entry above.
+
+**Experiment.** None run against this package's own code; this entry is
+documentation, not a code change. The reconciliation work itself happened
+in the other repository — see its `CHRONICLE.md`, 2026-08-14 entry, and
+`Synthetic-Affect-Theory-#3` — where `python3 -m core.selftest` and
+`python3 -m pytest tests -q` (19 passed) confirm the honesty-hinge fix
+without altering this package.
+
+**Record.** This package's own numbers are unchanged from the entry above:
+`python3 -m pytest tests -q` — 45 tests; `python3 -m core.selftest` — PASS.
+`README.md` now links to the dedicated repository under "Two homes, not
+yet reconciled" so a reader here is not left assuming this is the only copy.
+
+---
+
 **All rights reserved.**
 TerAustralis Incognita™ — ABN 70 741 068 059
