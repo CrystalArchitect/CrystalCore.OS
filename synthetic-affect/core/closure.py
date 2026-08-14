@@ -47,6 +47,13 @@ class ClosurePolicy:
     def __init__(self) -> None:
         self._consecutive_stalls = 0
 
+    def reset(self) -> None:
+        """Return the policy to baseline (ported from Synthetic-Affect-Theory-,
+        2026-08-14). The auto-reset in `decide()` below already clears the
+        counter on any non-stalled label; this is for a caller that wants to
+        start a fresh goal's count explicitly, without waiting for one."""
+        self._consecutive_stalls = 0
+
     def decide(
         self, label: str, context: Optional[Dict[str, Any]] = None
     ) -> ClosureDecision:

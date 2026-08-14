@@ -44,6 +44,7 @@ class Loop:
         log_path: Optional[str] = None,
         llm_core: Optional[Callable[[str], str]] = None,
         bind_default: bool = True,
+        window: int = 10,
     ):
         # No log path → a fresh temp directory, not a CWD-relative default.
         # An earlier default of "examples/logs/loop.jsonl" meant merely
@@ -58,7 +59,7 @@ class Loop:
         self.runtime = Runtime(
             state=PersistentStateStore(store_path),
             gap_detector=GapDetector(),
-            affect_model=AffectModel(),
+            affect_model=AffectModel(window=window),
             closure_policy=ClosurePolicy(),
             logger=CycleLogger(log_path),
         )

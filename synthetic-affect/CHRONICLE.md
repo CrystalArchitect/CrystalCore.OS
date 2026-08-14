@@ -189,6 +189,59 @@ without altering this package.
 `README.md` now links to the dedicated repository under "Two homes, not
 yet reconciled" so a reader here is not left assuming this is the only copy.
 
+## 2026-08-14 — reconciliation, the other direction: docs and code from `Synthetic-Affect-Theory-`
+
+**Evidence.** The prior entry recorded the scope gap in both directions.
+`Synthetic-Affect-Theory-#5` closed canon → there (the harness and two
+docs files). This entry closes there → here: a windowed `AffectModel`
+(F6, `window=10`), an explicit `ClosurePolicy.reset()`, and
+`docs/lyrics/`.
+
+**Interpretation.** Not everything on the other side belongs here.
+`docs/ai/Claude.md` and `docs/ai/MetaAI.md` are factual, repo-specific
+credit records — "landing v0.1 in this repository," with that repository's
+own verified numbers. Copying them here would misattribute this package's
+own history, which `ATTRIBUTION.md` already states correctly and
+differently (Meta AI drafted the reference implementation delivered
+2026-08-12; Claude found and fixed the defects that draft shipped with).
+`docs/ATTRIBUTIONS.md` — a third-party-marks notice for SpaceX, Tesla,
+Grok, Neuralink, Synchron, Lynas, Suno — names nothing that appears
+anywhere in this package's own docs; porting it would be irrelevant
+padding, not reconciliation. Both are deliberately not ported, and this
+paragraph is the record of that decision, not a silent gap. `docs/lyrics/`
+is different in kind: Vision-belt mythos content *about* this theory's own
+mechanics (state persistence, revoke timing, the window, the log shape),
+not a claim about who built what where — safe to port, and it was.
+
+**Experiment.** `core/affect.py`: `AffectModel.__init__(self, window=10)`,
+`classify()` now operates on `history[-self.window:]` throughout. Every
+existing check already only ever read `history[-1]`, `history[-2]`, and
+`history[-STALL_RUN:]`, so this is backward-compatible by construction for
+any run shorter than the window — which every test, example, and harness
+run in this package is. `core/loop.py`'s `Loop.__init__` gained a `window`
+parameter, threaded through to `AffectModel(window=window)`.
+`core/closure.py`'s `ClosurePolicy` gained `reset()`, distinct from the
+auto-reset already inside `decide()` — for a caller that wants to start a
+fresh goal's stall count explicitly rather than waiting for a non-stalled
+label. Five new tests: `tests/test_affect_window.py` (default window is
+10, `window < 1` raises, a 300-entry history classifies identically to its
+last-10 tail, and — the test that proves the window is actually applied,
+not just accepted and ignored — a `window=2` `AffectModel` reads a
+three-gap stalled run as `uncertain` instead) and one in `tests/test_closure.py`
+for `reset()`. `docs/lyrics/SOVEREIGN-GAP-HELD.md` and `BRIDGE-NOT-LOOP.md`
+ported with this package's own `™` (no variant selector) convention.
+
+**Record.** Measured on this machine, 2026-08-14: `python3 -m pytest tests -q`
+→ 50 passed (45 → 50); `python3 -m core.selftest` → PASS, 3 cycles, 12 log
+lines, closure success rate 0.50, state survived reopen — **unchanged from
+before this entry**, confirming the windowing addition changes nothing at
+this package's own scale, by measurement rather than by the argument
+alone; `examples/logs/*.jsonl` and `experiments/results/{results.json,
+RESULTS.md}` re-run and diffed against the pre-change committed baseline —
+`git diff --stat examples/logs/ experiments/results/` empty, both before
+staging this commit; `grep -rnE "[A-Za-z0-9]®" . --exclude-dir=.git` →
+nothing.
+
 ---
 
 **All rights reserved.**
