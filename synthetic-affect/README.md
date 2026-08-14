@@ -16,6 +16,19 @@ inner experience.
 - **[CHRONICLE.md](CHRONICLE.md)** — dated record: evidence → interpretation →
   experiment → record
 
+## Two homes, not yet reconciled
+
+**This directory is canon.** A second, independent copy of this package also
+exists at
+[`CrystalArchitect/Synthetic-Affect-Theory-`](https://github.com/CrystalArchitect/Synthetic-Affect-Theory-)
+(landed 2026-08-12, PRs [#1](https://github.com/CrystalArchitect/Synthetic-Affect-Theory-/pull/1)
+and [#2](https://github.com/CrystalArchitect/Synthetic-Affect-Theory-/pull/2)).
+Whether that dedicated repository becomes the theory's public home is still an
+open decision, not made here or by this note — see this directory's
+`CHRONICLE.md`, 2026-08-14 entry, for what has and has not been reconciled
+between the two. Nothing in this directory has been renamed, moved, or turned
+into a pointer; it is the full package, same as before the split.
+
 ## Prove it
 
 ```bash
