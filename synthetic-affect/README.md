@@ -25,16 +25,18 @@ exists at
 and [#2](https://github.com/CrystalArchitect/Synthetic-Affect-Theory-/pull/2)).
 Whether that dedicated repository becomes the theory's public home is still an
 open decision, not made here or by this note — see this directory's
-`CHRONICLE.md`, 2026-08-14 entry, for what has and has not been reconciled
-between the two. Nothing in this directory has been renamed, moved, or turned
-into a pointer; it is the full package, same as before the split.
+`CHRONICLE.md` for what has and has not been reconciled between the two,
+in both directions (2026-08-14 entries). Nothing in this directory has been
+renamed, moved, or turned into a pointer; it is the full package, same as
+before the split — plus a windowed `AffectModel`, `ClosurePolicy.reset()`,
+and `docs/lyrics/`, ported the other direction.
 
 ## Prove it
 
 ```bash
 cd synthetic-affect
 python3 -m core.selftest                  # exact assertions, exit 0
-python3 -m pytest tests -q                # 45 tests
+python3 -m pytest tests -q                # 50 tests
 python3 examples/01_repeated_query.py     # regenerates its own log
 python3 examples/02_gap_reopens.py
 python3 -m experiments.harness            # regenerates the prediction-1 results
@@ -54,6 +56,13 @@ log carries a wall clock. If a fresh run changes them, they were never outputs.
 - Five affect labels, every one reachable and asserted so by the test suite
 - Closure decisions judged by the *following* cycle, so closure success rate is a
   measurement rather than a self-report
+- `AffectModel` windowed (F6, `window=10` default, ported from
+  `Synthetic-Affect-Theory-` 2026-08-14): `classify()` sees only a trailing
+  slice of history, so a long-running loop's memory of the classifier's own
+  inputs doesn't grow without bound. Backward compatible — see
+  `tests/test_affect_window.py` and `core/affect.py`'s docstring
+- `ClosurePolicy.reset()` (ported alongside), for a caller that wants to
+  start a fresh goal's stall count explicitly
 - **The prediction-1 harness** — the loop against stateless baselines on a
   six-task scripted suite, controls and loop-losing tasks included. Loop 5/6
   with one policy and no task knowledge; best single stateless 2/6; the
@@ -90,12 +99,12 @@ The gap narrows, the label tracks it, the policy changes move, and the rate is
 ## Layout
 
 ```
-core/          state · gap · affect · closure · loop · crystalcode · log · selftest
+core/          state · gap · affect (windowed) · closure (with reset()) · loop · crystalcode · log · selftest
 crystalcode/   SPEC.md — the primitive contract
-docs/          figure-1.svg · FIGURE-1.md · GLOSSARY.md
+docs/          figure-1.svg · FIGURE-1.md · GLOSSARY.md · lyrics/ (Vision belt, reference)
 examples/      two runnable scenarios, with their committed logs
 experiments/   the prediction-1 harness — tasks · agents · results
-tests/         45 tests
+tests/         50 tests
 ```
 
 ## Licence

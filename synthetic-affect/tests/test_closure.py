@@ -28,3 +28,15 @@ def test_stall_counter_resets_on_any_other_label():
 def test_decision_does_not_grade_itself():
     # outcome stays pending until a later cycle observes what happened.
     assert ClosurePolicy().decide("closed").outcome == "pending"
+
+
+def test_reset_returns_policy_to_baseline():
+    # Ported from Synthetic-Affect-Theory- (2026-08-14): an explicit reset(),
+    # distinct from the auto-reset in decide() above — for a caller that
+    # wants to start a fresh goal's stall count without waiting for a
+    # non-stalled label to arrive first.
+    p = ClosurePolicy()
+    p.decide("stalled")
+    p.decide("stalled")
+    p.reset()
+    assert p.decide("stalled").strategy == "switch_tool"
