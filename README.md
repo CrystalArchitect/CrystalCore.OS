@@ -2,7 +2,8 @@
 
 A clean, futuristic web-based operating system themed around multiplanetary progress (Mars + Starship aesthetic).
 
-**Live Demo:** [https://crystalcore-os.vercel.app](https://crystalcore-os.vercel.app)
+**Live Demo:** [https://ccos-os-demo.vercel.app](https://ccos-os-demo.vercel.app)  
+*(Canonical hostname `crystalcore-os.vercel.app` is still an empty/permission-locked Vercel project — needs a dashboard redeploy or role fix to reclaim.)*
 
 ## The kernel log tells you which lines are real
 
