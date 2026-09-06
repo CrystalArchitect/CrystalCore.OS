@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CrystalCore.OS</title>
 <!-- Fonts load out of band. As a CSS @import this blocked first paint on the
      whole document: with the stylesheet unreachable the boot screen sat blank
@@ -13,12 +13,15 @@
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
+  html, body {
     background: #0a0e17;
     color: #e0f7ff;
     font-family: 'Inter', sans-serif;
     overflow: hidden;
-    height: 100vh;
+    height: 100%;
+    height: 100dvh;
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
   }
   
   /* Boot screen */
@@ -104,7 +107,8 @@
 
   /* Desktop */
   #desktop {
-    height: 100vh;
+    height: 100%;
+    height: 100dvh;
     background: 
       radial-gradient(ellipse at 20% 30%, rgba(0,229,255,0.08) 0%, transparent 50%),
       radial-gradient(ellipse at 80% 70%, rgba(123,47,247,0.06) 0%, transparent 50%),
@@ -244,6 +248,120 @@
     color: #00e5ff;
     margin-right: 6px;
   }
+
+  /* Mobile / narrow viewports */
+  @media (max-width: 720px) {
+    #boot {
+      padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+      justify-content: flex-start;
+      padding-top: max(48px, env(safe-area-inset-top));
+    }
+    .crystal { width: 88px; height: 88px; }
+    .boot-text { font-size: 22px; margin-top: 20px; }
+    #boot-log {
+      width: 100%;
+      max-height: 38dvh;
+      font-size: 11.5px;
+      margin-top: 16px;
+    }
+    #boot-panel { max-width: 100%; font-size: 11.5px; }
+    .boot-skip { font-size: 12px; margin-top: 14px; }
+
+    #desktop {
+      overflow: hidden;
+    }
+
+    .taskbar {
+      height: calc(64px + env(safe-area-inset-bottom));
+      padding: 0 12px env(safe-area-inset-bottom);
+      gap: 8px;
+    }
+    .taskbar-btn {
+      width: 48px;
+      height: 48px;
+      font-size: 18px;
+      border-radius: 12px;
+      flex: none;
+    }
+    .taskbar-btn:hover { transform: none; }
+    #taskbar-time {
+      font-size: 11px !important;
+      letter-spacing: 0.5px !important;
+      max-width: 42vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .window {
+      position: fixed !important;
+      top: max(12px, env(safe-area-inset-top)) !important;
+      left: 10px !important;
+      right: 10px !important;
+      bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+      width: auto !important;
+      height: auto !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      max-width: none !important;
+      border-radius: 14px;
+      display: none;
+      z-index: 20;
+    }
+    .window.active {
+      display: flex !important;
+      flex-direction: column;
+      z-index: 50;
+    }
+    .window-header {
+      cursor: default;
+      padding: 14px 16px;
+      font-size: 12px;
+      flex: none;
+    }
+    .window-close {
+      width: 22px;
+      height: 22px;
+    }
+    .window-body {
+      padding: 14px 16px 18px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1;
+      min-height: 0;
+    }
+
+    #mars-clock, #telemetry, #terminal, #news {
+      top: max(12px, env(safe-area-inset-top)) !important;
+      left: 10px !important;
+      right: 10px !important;
+      bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+      width: auto !important;
+      height: auto !important;
+    }
+
+    .sol { font-size: 36px; }
+    #term-output {
+      height: auto;
+      min-height: 140px;
+      max-height: none;
+      flex: 1;
+    }
+    #terminal .window-body {
+      display: flex;
+      flex-direction: column;
+    }
+    #term-input {
+      font-size: 16px; /* avoid iOS zoom on focus */
+      padding: 12px 0;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .taskbar-btn { width: 44px; height: 44px; }
+    .boot-text { font-size: 20px; }
+  }
+
 </style>
 </head>
 <body>
@@ -483,7 +601,12 @@
       document.getElementById('desktop').style.display = 'block';
       // Once only — a `boot` replay must not stack a second set of drag
       // listeners on every window header.
-      if (!dragReady) { initDrag(); dragReady = true; }
+      if (!dragReady) { initDrag();
+  /* mobile default sheet */
+  if (isMobileLayout()) {
+    document.querySelectorAll('.window').forEach(x => { x.style.display = 'none'; x.classList.remove('active'); });
+    showWin('mars-clock');
+  } dragReady = true; }
       const ti = document.getElementById('term-input');
       if (ti) ti.focus();
     }, facts.reduceMotion ? 0 : 1000);
@@ -536,12 +659,29 @@
   updateClocks();
 
   // Window helpers
+  function isMobileLayout() {
+    return window.matchMedia('(max-width: 720px)').matches;
+  }
   function closeWin(el) {
-    el.closest('.window').style.display = 'none';
+    const w = el.closest('.window');
+    w.classList.remove('active');
+    if (isMobileLayout()) {
+      w.style.display = 'none';
+    } else {
+      w.style.display = 'none';
+    }
   }
   function showWin(id) {
     const w = document.getElementById(id);
-    w.style.display = 'block';
+    if (isMobileLayout()) {
+      document.querySelectorAll('.window').forEach(x => {
+        x.classList.remove('active');
+        x.style.display = 'none';
+      });
+      w.style.display = 'flex';
+    } else {
+      w.style.display = 'block';
+    }
     bringToFront(w);
   }
   function bringToFront(w) {
@@ -557,6 +697,7 @@
       
       header.addEventListener('mousedown', e => {
         if (e.target.classList.contains('window-close')) return;
+        if (isMobileLayout()) return;
         dragging = true;
         bringToFront(win);
         offsetX = e.clientX - win.offsetLeft;
@@ -577,6 +718,7 @@
       // Touch support
       header.addEventListener('touchstart', e => {
         if (e.target.classList.contains('window-close')) return;
+        if (isMobileLayout()) return;
         dragging = true;
         bringToFront(win);
         const t = e.touches[0];
